@@ -18,7 +18,6 @@ test.describe.serial("班表管理", () => {
     // (global-setup cleared all data)
     await page.selectOption('select:first-of-type', '2026');
     await page.locator("select").nth(1).selectOption("5");
-    await page.locator('button:has-text("載入")').click();
 
     await page.locator('button:has-text("建立新月份"), button:has-text("建立空白月份")').first().click();
     await page.waitForSelector("table", { timeout: 10_000 });
@@ -43,7 +42,6 @@ test.describe.serial("班表管理", () => {
   // ── 4-3: Switch month and create ─────────────────────────────────────────
   test("4-3: 切換到 2026-06，可建立另一月份", async ({ page }) => {
     await page.locator("select").nth(1).selectOption("6");
-    await page.locator('button:has-text("載入")').click();
     await expect(
       page.locator('button:has-text("建立新月份"), button:has-text("建立空白月份")')
     ).toBeVisible({ timeout: 5_000 });
@@ -57,7 +55,6 @@ test.describe.serial("班表管理", () => {
 
     // Switch back to May for following tests
     await page.locator("select").nth(1).selectOption("5");
-    await page.locator('button:has-text("載入")').click();
     await page.waitForSelector("table", { timeout: 5_000 });
   });
 

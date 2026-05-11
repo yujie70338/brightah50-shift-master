@@ -17,7 +17,7 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
   async function _fillUnavailabilityForm(
     page: import("@playwright/test").Page,
     dateValue: string, // e.g. "2026-05-15"
-    slots: ("morning" | "afternoon" | "evening")[] = ["morning"]
+    slots: ("morning" | "afternoon" | "evening")[] = ["morning"],
   ) {
     const panel = page.locator("text=提報不可上班時間").locator("..");
     // Select date
@@ -27,8 +27,12 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
       .selectOption(dateValue);
     // Check slots
     for (const slot of slots) {
-      const slotLabel = { morning: "早班", afternoon: "中班", evening: "晚班" }[slot];
-      await panel.locator(`label:has-text('${slotLabel}') input[type='checkbox']`).check();
+      const slotLabel = { morning: "早班", afternoon: "中班", evening: "晚班" }[
+        slot
+      ];
+      await panel
+        .locator(`label:has-text('${slotLabel}') input[type='checkbox']`)
+        .check();
     }
   }
 
@@ -43,7 +47,10 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     await page.locator("text=提報不可上班時間").scrollIntoViewIfNeeded();
     await expect(page.locator("text=提報不可上班時間")).toBeVisible();
     // Panel should have year, month, date selects
-    const selects = page.locator("text=提報不可上班時間").locator("..").locator("select");
+    const selects = page
+      .locator("text=提報不可上班時間")
+      .locator("..")
+      .locator("select");
     await expect(selects).toHaveCount(3); // year, month, date
   });
 
@@ -55,34 +62,52 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
 
     // Switch to Feb 2026 (28 days)
     await panel.locator("select").nth(1).selectOption("2"); // month
-    const dateOptions = await panel.locator("select").last().locator("option").allInnerTexts();
+    const dateOptions = await panel
+      .locator("select")
+      .last()
+      .locator("option")
+      .allInnerTexts();
     // 1 placeholder + 28 day options = 29
     expect(dateOptions.length).toBe(29);
 
     // Switch back to May 2026 (31 days)
     await panel.locator("select").nth(1).selectOption("5");
-    const mayOptions = await panel.locator("select").last().locator("option").allInnerTexts();
+    const mayOptions = await panel
+      .locator("select")
+      .last()
+      .locator("option")
+      .allInnerTexts();
     expect(mayOptions.length).toBe(32); // 1 placeholder + 31
   });
 
   // ── 7-3: Submit form → success, panel resets ─────────────────────────────
-  test("7-3: 選擇日期與班別，點「提交」成功送出，面板重置", async ({ page }) => {
+  test("7-3: 選擇日期與班別，點「提交」成功送出，面板重置", async ({
+    page,
+  }) => {
     await page.goto("/schedule");
     await signIn(page, "staff1@brightah50.com");
 
     const panel = page.locator("text=提報不可上班時間").locator("..");
     await panel.locator("select").last().selectOption("2026-05-15");
-    await panel.locator("label:has-text('早班') input[type='checkbox']").check();
+    await panel
+      .locator("label:has-text('早班') input[type='checkbox']")
+      .check();
     await panel.locator("button:has-text('提交')").click();
 
     // Form should reset after successful submission
-    await expect(panel.locator("select").last()).toHaveValue("", { timeout: 5_000 });
+    await expect(panel.locator("select").last()).toHaveValue("", {
+      timeout: 5_000,
+    });
     // New record should appear in the record list (table cell, not select option)
-    await expect(panel.locator("td:has-text('15')")).toBeVisible({ timeout: 5_000 });
+    await expect(panel.locator("td:has-text('15')")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ── 7-4: Duplicate submission → allowed as independent doc ───────────────
-  test("7-4: 重複提交相同日期+班別，系統建立獨立 document", async ({ page }) => {
+  test("7-4: 重複提交相同日期+班別，系統建立獨立 document", async ({
+    page,
+  }) => {
     await page.goto("/schedule");
     await signIn(page, "staff1@brightah50.com");
 
@@ -93,7 +118,9 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
 
     // Submit again for same date
     await panel.locator("select").last().selectOption("2026-05-15");
-    await panel.locator("label:has-text('早班') input[type='checkbox']").check();
+    await panel
+      .locator("label:has-text('早班') input[type='checkbox']")
+      .check();
     await panel.locator("button:has-text('提交')").click();
 
     // Count should increase
@@ -143,10 +170,10 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
               Authorization: "Bearer owner",
             },
             body: JSON.stringify(body),
-          }
+          },
         );
       },
-      [FS, PROJECT]
+      [FS, PROJECT],
     );
 
     // Switch to staff view — ReadOnlyBoard should show ⚠ on row 15 morning
@@ -157,7 +184,10 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     // Give Firestore listeners time to settle before checking
     await page.waitForTimeout(1_500);
 
-    const staffRow15 = page.locator("table tbody tr").filter({ hasText: "15" }).first();
+    const staffRow15 = page
+      .locator("table tbody tr")
+      .filter({ hasText: "15" })
+      .first();
     await expect(staffRow15.locator("text=⚠")).toBeVisible({ timeout: 8_000 });
   });
 
@@ -167,7 +197,9 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     await signIn(page, "manager@brightah50.com");
     // Scroll to bottom — no panel
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await expect(page.locator("text=提報不可上班時間")).not.toBeVisible({ timeout: 3_000 });
+    await expect(page.locator("text=提報不可上班時間")).not.toBeVisible({
+      timeout: 3_000,
+    });
   });
 
   // ════════════════════════════════════════════
@@ -175,7 +207,9 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
   // ════════════════════════════════════════════
 
   // ── 8-1: Staff sees own records, no 姓名 column ──────────────────────────
-  test("8-1: staff 進入 /unavailability，顯示自己的記錄，無「姓名」欄", async ({ page }) => {
+  test("8-1: staff 進入 /unavailability，顯示自己的記錄，無「姓名」欄", async ({
+    page,
+  }) => {
     await page.goto("/schedule");
     await signIn(page, "staff1@brightah50.com");
     await page.locator("a:has-text('請假申請')").click();
@@ -184,7 +218,9 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     // 姓名 column should NOT appear for staff
     await expect(page.locator("th:has-text('姓名')")).not.toBeVisible();
     // Should see own records (at least one from test 7-3)
-    await expect(page.locator("text=早班").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=早班").first()).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ── 8-2: Switch month → list updates ─────────────────────────────────────
@@ -195,10 +231,14 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
 
     const monthSelect = page.locator("select").nth(1);
     await monthSelect.selectOption("4"); // April — should have 0 records
-    await expect(page.locator("text=此月份無請假紀錄")).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=此月份無請假紀錄")).toBeVisible({
+      timeout: 5_000,
+    });
 
     await monthSelect.selectOption("5"); // Back to May
-    await expect(page.locator("text=早班").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=早班").first()).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ── 8-3: Delete record ───────────────────────────────────────────────────
@@ -213,21 +253,31 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
 
     // handleDelete calls window.confirm() — accept it before clicking
     page.once("dialog", (dialog) => dialog.accept());
-    await page.locator("tbody tr").first().locator("button:has-text('刪除')").click();
+    await page
+      .locator("tbody tr")
+      .first()
+      .locator("button:has-text('刪除')")
+      .click();
     await page.waitForTimeout(1_000);
     const countAfter = await page.locator("tbody tr").count();
     expect(countAfter).toBeLessThan(countBefore);
   });
 
   // ── 8-4: Manager sees all records with 姓名 column ───────────────────────
-  test("8-4: manager 進入 /unavailability，顯示所有員工記錄，有「姓名」欄", async ({ page }) => {
+  test("8-4: manager 進入 /unavailability，顯示所有員工記錄，有「姓名」欄", async ({
+    page,
+  }) => {
     await page.goto("/schedule");
     await signIn(page, "manager@brightah50.com");
     await page.locator("a:has-text('請假申請')").click();
 
-    await expect(page.locator("th:has-text('姓名')")).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("th:has-text('姓名')")).toBeVisible({
+      timeout: 5_000,
+    });
     // Manager sees names like 王小明
-    await expect(page.locator("text=王小明").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=王小明").first()).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ── 8-5: Manager can delete any employee's record ────────────────────────
@@ -238,7 +288,10 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
 
     const rows = page.locator("tbody tr");
     // Wait for records to load
-    await rows.first().waitFor({ timeout: 5_000 }).catch(() => {});
+    await rows
+      .first()
+      .waitFor({ timeout: 5_000 })
+      .catch(() => {});
     const countBefore = await rows.count();
     if (countBefore === 0) {
       test.skip(true, "No records to delete");
@@ -264,11 +317,13 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
       async ([fs, proj]) => {
         const body = {
           fields: {
-            userId:          { stringValue: "staff2@brightah50.com" },
+            userId: { stringValue: "staff2@brightah50.com" },
             userDisplayName: { stringValue: "李小華" },
-            date:            { stringValue: "2026-05-20" },
-            unavailableSlots:{ arrayValue: { values: [{ stringValue: "morning" }] } },
-            reason:          { stringValue: "測試8-6" },
+            date: { stringValue: "2026-05-20" },
+            unavailableSlots: {
+              arrayValue: { values: [{ stringValue: "morning" }] },
+            },
+            reason: { stringValue: "測試8-6" },
           },
         };
         await fetch(
@@ -277,10 +332,10 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
-          }
+          },
         );
       },
-      [FS, PROJECT]
+      [FS, PROJECT],
     );
 
     // Sign in as staff1 and verify staff2's record is NOT shown
@@ -290,7 +345,9 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     await page.goto("/unavailability");
 
     // staff1 should not see staff2's record
-    await expect(page.locator("text=李小華")).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=李小華")).not.toBeVisible({
+      timeout: 5_000,
+    });
     await expect(page.locator("text=測試8-6")).not.toBeVisible();
   });
 });

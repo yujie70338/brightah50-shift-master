@@ -28,8 +28,16 @@ export function MonthControls({
 
   const selectedId = `${pickerYear}-${String(pickerMonth).padStart(2, "0")}`;
 
-  const handleLoad = () => {
-    onMonthChange(selectedId);
+  const handleYearChange = (year: number) => {
+    setPickerYear(year);
+    const id = `${year}-${String(pickerMonth).padStart(2, "0")}`;
+    onMonthChange(id);
+  };
+
+  const handleMonthChange = (month: number) => {
+    setPickerMonth(month);
+    const id = `${pickerYear}-${String(month).padStart(2, "0")}`;
+    onMonthChange(id);
   };
 
   const handleCreate = async () => {
@@ -75,10 +83,10 @@ export function MonthControls({
         borderRadius: "8px",
       }}
     >
-      {/* Month picker */}
+      {/* Month picker — auto-loads on change */}
       <select
         value={pickerYear}
-        onChange={(e) => setPickerYear(Number(e.target.value))}
+        onChange={(e) => handleYearChange(Number(e.target.value))}
         style={{ padding: "0.4rem" }}
       >
         {years.map((y) => (
@@ -89,7 +97,7 @@ export function MonthControls({
       </select>
       <select
         value={pickerMonth}
-        onChange={(e) => setPickerMonth(Number(e.target.value))}
+        onChange={(e) => handleMonthChange(Number(e.target.value))}
         style={{ padding: "0.4rem" }}
       >
         {months.map((m) => (
@@ -98,10 +106,6 @@ export function MonthControls({
           </option>
         ))}
       </select>
-
-      <button onClick={handleLoad} style={{ padding: "0.4rem 0.75rem" }}>
-        載入
-      </button>
 
       {isManager && (
         <button
