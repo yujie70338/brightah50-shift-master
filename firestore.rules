@@ -1,0 +1,113 @@
+rules_version='2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────────────────────
+
+    // Must be signed in via Firebase Auth
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Token must carry role claim (set by beforeUserSignedIn blocking trigger)
+    function hasRole(role) {
+      return isSignedIn() && request.auth.token.get('role', '') == role;
+    }
+
+    function isManager() {
+      return hasRole('manager');
+    }
+
+    // Only allow fields that are declared in our schema
+    function userFieldsOnly() {
+      return request.resource.data.keys().hasOnly(
+        ['displayName', 'email', 'role', 'isActive']
+      );
+    }
+
+    function scheduleFieldsOnly() {
+      return request.resource.data.keys().hasOnly(
+        ['year', 'month', 'isPublished', 'managerId']
+      );
+    }
+
+    function shiftFieldsOnly() {
+      return request.resource.data.keys().hasOnly(
+        ['date', 'dayOfWeek', 'slots']
+      );
+    }
+
+    function unavailabilityFieldsOnly() {
+      return request.resource.data.keys().hasOnly(
+        ['userId', 'userDisplayName', 'date', 'unavailableSlots', 'reason']
+      );
+    }
+
+    // Caller owns the unavailability document
+    function isOwner(resource) {
+      return isSignedIn()
+        && resource.data.userId == request.auth.token.email;
+    }
+
+    // ── users ───────────────────────────────────────────────────────────────
+    // Doc ID = email address
+    match /users/{email} {
+      // Any signed-in user may read the roster (needed to render shift labels)
+      allow read: if isSignedIn();
+
+      // Only managers may create or update user documents
+      allow create: if isManager() && userFieldsOnly();
+      allow update: if isManager() && userFieldsOnly();
+
+      // No one can delete user documents (preserve history)
+      allow delete: if false;
+    }
+
+    // ── monthly_schedules ───────────────────────────────────────────────────
+    match /monthly_schedules/{scheduleId} {
+      allow read: if isSignedIn();
+
+      // Managers create months via Cloud Function (initializeBlankMonth),
+      // but also allow direct write for publish toggle from the client.
+      allow create: if isManager() && scheduleFieldsOnly();
+      allow update: if isManager() && scheduleFieldsOnly();
+      allow delete: if false;
+
+      // ── shifts (subcollection) ─────────────────────────────────────────
+      match /shifts/{shiftId} {
+        allow read: if isSignedIn();
+
+        // Only managers may mutate shift documents (drag-and-drop updates)
+        allow create: if isManager() && shiftFieldsOnly();
+        allow update: if isManager() && shiftFieldsOnly();
+        allow delete: if false;
+      }
+    }
+
+    // ── unavailability ──────────────────────────────────────────────────────
+    match /unavailability/{docId} {
+      // All signed-in users may read all unavailability entries
+      // (manager needs to see everyone's; staff sees all for context)
+      allow read: if isSignedIn();
+
+      // A user may only create a record for themselves
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.token.email
+        && unavailabilityFieldsOnly();
+
+      // A user may only update or delete their own records
+      allow update: if isOwner(resource)
+        && request.resource.data.userId == request.auth.token.email
+        && unavailabilityFieldsOnly();
+
+      allow delete: if isOwner(resource) || isManager();
+    }
+
+    // ── deny everything else ────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

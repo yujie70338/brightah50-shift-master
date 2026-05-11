@@ -1,0 +1,212 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1: Lint + Typecheck (matrix: functions / webapp)
+  # ──────────────────────────────────────────────
+  lint-typecheck:
+    name: Lint & Typecheck (${{ matrix.workspace }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [functions, webapp]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - name: Cache node_modules (${{ matrix.workspace }})
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.workspace }}/node_modules
+          key: ${{ runner.os }}-node24-${{ matrix.workspace }}-${{ hashFiles(format('{0}/package-lock.json', matrix.workspace)) }}
+          restore-keys: |
+            ${{ runner.os }}-node24-${{ matrix.workspace }}-
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ matrix.workspace }}
+
+      # webapp vite build requires env vars to be present (even placeholder values)
+      - name: Create stub .env.local for webapp build
+        if: matrix.workspace == 'webapp'
+        run: |
+          cat > webapp/.env.local << 'EOF'
+          VITE_FIREBASE_API_KEY=ci-placeholder
+          VITE_FIREBASE_AUTH_DOMAIN=ci-placeholder.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID=ci-placeholder
+          VITE_FIREBASE_STORAGE_BUCKET=ci-placeholder.appspot.com
+          VITE_FIREBASE_MESSAGING_SENDER_ID=000000000000
+          VITE_FIREBASE_APP_ID=1:000000000000:web:0000000000000000
+          EOF
+
+      - name: Lint
+        run: npm run lint
+        working-directory: ${{ matrix.workspace }}
+
+      - name: Typecheck / Build
+        run: npm run build
+        working-directory: ${{ matrix.workspace }}
+
+  # ──────────────────────────────────────────────
+  # Job 2: Unit Tests (functions only, no emulator)
+  # ──────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint-typecheck
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Cache node_modules (functions)
+        uses: actions/cache@v4
+        with:
+          path: functions/node_modules
+          key: ${{ runner.os }}-node24-functions-${{ hashFiles('functions/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node24-functions-
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: functions
+
+      - name: Run unit tests (JUnit report)
+        run: npx vitest run test/functions.test.ts --reporter=default --reporter=junit --outputFile.junit=test-results/unit.xml
+        working-directory: functions
+
+      - name: Publish unit test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: functions/test-results/unit.xml
+          check_name: Unit Test Results
+          fail_on_failure: true
+
+  # ──────────────────────────────────────────────
+  # Job 3: Firestore Rules Tests (needs Java 21 + emulator)
+  # ──────────────────────────────────────────────
+  rules-tests:
+    name: Firestore Rules Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint-typecheck
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Cache node_modules (functions)
+        uses: actions/cache@v4
+        with:
+          path: functions/node_modules
+          key: ${{ runner.os }}-node24-functions-${{ hashFiles('functions/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node24-functions-
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: functions
+
+      - name: Run Firestore rules tests (JUnit report)
+        run: |
+          npx firebase-tools@latest emulators:exec \
+            --only firestore \
+            --project brightah50-shift-master \
+            "npx vitest run test/rules.test.ts --reporter=default --reporter=junit --outputFile.junit=test-results/rules.xml"
+        working-directory: functions
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+
+      - name: Publish rules test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: functions/test-results/rules.xml
+          check_name: Firestore Rules Test Results
+          fail_on_failure: true
+
+  # ──────────────────────────────────────────────
+  # Job 4: Security (npm audit + secrets scan)
+  # ──────────────────────────────────────────────
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint-typecheck
+    permissions:
+      contents: read
+      pull-requests: write # dependency-review needs this
+      security-events: write # for future SARIF upload
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks needs full history
+
+      - name: Scan for hardcoded secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Block PRs that introduce high-severity CVEs in new dependencies
+      - name: Dependency review (PRs only)
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Cache node_modules (functions)
+        uses: actions/cache@v4
+        with:
+          path: functions/node_modules
+          key: ${{ runner.os }}-node24-functions-${{ hashFiles('functions/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node24-functions-
+
+      - name: Cache node_modules (webapp)
+        uses: actions/cache@v4
+        with:
+          path: webapp/node_modules
+          key: ${{ runner.os }}-node24-webapp-${{ hashFiles('webapp/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node24-webapp-
+
+      - name: Audit functions dependencies
+        run: npm ci && npm audit --audit-level=high
+        working-directory: functions
+
+      - name: Audit webapp dependencies
+        run: npm ci && npm audit --audit-level=high
+        working-directory: webapp

@@ -1,0 +1,67 @@
+# ── Logs ────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug.*.log*
+firestore-debug.log
+ui-debug.log
+
+# ── Firebase ─────────────────────────────────────────────────────────────────
+.firebase/
+# .firebaserc is intentionally tracked so all team members target the same project.
+
+# ── Build outputs ────────────────────────────────────────────────────────────
+# Cloud Functions TypeScript compile output
+functions/lib/
+# Vite / webapp production build
+webapp/dist/
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# ── Environment variables (NEVER commit secrets) ─────────────────────────────
+# Copy webapp/.env.local.example → webapp/.env.local and fill in values.
+.env
+.env.local
+.env.*.local
+# Vite exposes any VITE_* var to the browser bundle; keep them out of git.
+webapp/.env.local
+webapp/.env.*.local
+
+# ── Service account keys ──────────────────────────────────────────────────────
+*.json.key
+service-account*.json
+*-service-account.json
+*-adminsdk-*.json
+
+# ── Dependency directories ────────────────────────────────────────────────────
+node_modules/
+.npm
+
+# ── Test coverage ─────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Playwright test output ────────────────────────────────────────────────────
+webapp/playwright-report/
+webapp/test-results/
+
+# ── AI / Editor tooling (not project source code) ────────────────────────────
+.claude/
+skills-lock.json
+.vscode/
+
+# ── OS artefacts ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+.eslintcache
+*.tgz
+.yarn-integrity
+pids/
+*.pid
+*.pid.lock
+.dataconnect
