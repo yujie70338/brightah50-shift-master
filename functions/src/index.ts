@@ -1,16 +1,16 @@
-import { setGlobalOptions } from "firebase-functions";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { beforeUserSignedIn } from "firebase-functions/v2/identity";
-import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import {setGlobalOptions} from "firebase-functions";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {beforeUserSignedIn} from "firebase-functions/v2/identity";
+import {onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
-import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp } from "firebase-admin/app";
-import { User, MonthlySchedule, ShiftDocument, ShiftSlots } from "./types.js";
+import {getFirestore} from "firebase-admin/firestore";
+import {initializeApp} from "firebase-admin/app";
+import {User, MonthlySchedule, ShiftDocument, ShiftSlots} from "./types.js";
 
 initializeApp();
 const db = getFirestore();
 
-setGlobalOptions({ maxInstances: 10, region: "asia-northeast1" });
+setGlobalOptions({maxInstances: 10, region: "asia-northeast1"});
 
 // ---------------------------------------------------------------------------
 // 1. Auth Blocking Trigger — 白名單登入攔截
@@ -70,7 +70,7 @@ export const initializeBlankMonth = onCall(async (request) => {
   }
 
   // 驗證參數
-  const { year, month } = request.data as { year: number; month: number };
+  const {year, month} = request.data as { year: number; month: number };
   if (
     !year ||
     !month ||
@@ -135,7 +135,7 @@ export const initializeBlankMonth = onCall(async (request) => {
   await batch.commit();
 
   logger.info(`Blank month created: ${scheduleId} by ${callerEmail}`);
-  return { scheduleId, daysCreated: daysInMonth };
+  return {scheduleId, daysCreated: daysInMonth};
 });
 
 // ---------------------------------------------------------------------------

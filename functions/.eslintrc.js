@@ -20,6 +20,8 @@ module.exports = {
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
     "/generated/**/*", // Ignore generated files.
+    "test/**/*", // Test files use tsconfig.dev.json only — handled separately
+    "vitest.config.ts",
   ],
   plugins: [
     "@typescript-eslint",

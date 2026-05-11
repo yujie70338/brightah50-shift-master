@@ -14,7 +14,7 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
   });
 
   // ── helper: fill unavailability form via Playwright native interactions ───
-  async function fillUnavailabilityForm(
+  async function _fillUnavailabilityForm(
     page: import("@playwright/test").Page,
     dateValue: string, // e.g. "2026-05-15"
     slots: ("morning" | "afternoon" | "evening")[] = ["morning"]
