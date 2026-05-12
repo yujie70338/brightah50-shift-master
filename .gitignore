@@ -48,10 +48,6 @@ coverage/
 webapp/playwright-report/
 webapp/test-results/
 
-# ── AI / Editor tooling (not project source code) ────────────────────────────
-.claude/
-skills-lock.json
-.vscode/
 
 # ── OS artefacts ─────────────────────────────────────────────────────────────
 .DS_Store
