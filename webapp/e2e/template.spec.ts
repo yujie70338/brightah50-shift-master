@@ -20,8 +20,9 @@ test.describe.serial("週班表模板管理", () => {
 
   // ── 8-2: Manager can create a template ────────────────────────────────
   test("8-2: 管理員可建立新模板並儲存", async ({ page }) => {
-    await page.goto("/templates");
+    await page.goto("/schedule");
     await signIn(page, "manager@brightah50.com");
+    await page.goto("/templates");
 
     // Fill in template name
     await page
@@ -39,8 +40,9 @@ test.describe.serial("週班表模板管理", () => {
 
   // ── 8-3: Manager can assign staff to a template cell ──────────────────
   test("8-3: 管理員可在模板格子中指派員工", async ({ page }) => {
-    await page.goto("/templates");
+    await page.goto("/schedule");
     await signIn(page, "manager@brightah50.com");
+    await page.goto("/templates");
 
     // Click the template we just created
     await page.locator("div:has-text('E2E 測試模板')").first().click();
@@ -88,6 +90,11 @@ test.describe.serial("週班表模板管理", () => {
     await expect(
       page.locator("h3:has-text('套用週班表模板')"),
     ).toBeVisible({ timeout: 5_000 });
+
+    // Wait for templates to load in the modal select
+    await expect(
+      page.locator("option:has-text('E2E 測試模板')")
+    ).toBeAttached({ timeout: 8_000 });
 
     // Select the template we created
     await page.locator("select").last().selectOption({ label: "E2E 測試模板" });
