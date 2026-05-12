@@ -5,6 +5,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { SchedulePage } from "./pages/SchedulePage";
 import { AdminPage } from "./pages/AdminPage";
 import { UnavailabilityListPage } from "./pages/UnavailabilityListPage";
+import { TemplatePage } from "./pages/TemplatePage";
 
 function App() {
   return (
@@ -33,6 +34,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UnavailabilityListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates"
+            element={
+              <ProtectedRoute requireRole="manager">
+                <TemplatePage />
               </ProtectedRoute>
             }
           />

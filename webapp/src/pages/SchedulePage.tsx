@@ -36,6 +36,7 @@ export function SchedulePage() {
         <h1 style={{ margin: 0 }}>排班系統</h1>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           {isManager && <Link to="/admin">管理後台</Link>}
+          {isManager && <Link to="/templates">班表模板</Link>}
           <Link to="/unavailability">請假申請</Link>
           <span style={{ color: "#555" }}>{userProfile?.displayName}</span>
           <button onClick={logout}>登出</button>
@@ -46,6 +47,7 @@ export function SchedulePage() {
       <MonthControls
         schedule={schedule}
         scheduleId={scheduleId}
+        shifts={shifts}
         onMonthChange={setScheduleId}
         isManager={isManager}
       />

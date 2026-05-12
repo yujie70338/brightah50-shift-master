@@ -364,3 +364,126 @@ describe("unavailability collection", () => {
     await assertSucceeds(deleteDoc(doc(managerDb(), "unavailability", "doc1")));
   });
 });
+
+// ============================================================================
+// weekly_templates collection
+// ============================================================================
+describe("weekly_templates collection", () => {
+  const emptySlots = { morning: [], afternoon: [], evening: [] };
+  const validTemplate = {
+    name: "標準週班表",
+    createdBy: "manager@example.com",
+    updatedAt: new Date(),
+    days: {
+      日: emptySlots,
+      一: emptySlots,
+      二: emptySlots,
+      三: emptySlots,
+      四: emptySlots,
+      五: emptySlots,
+      六: emptySlots,
+    },
+  };
+
+  it("unauthenticated user cannot read templates", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), "weekly_templates", "t1"),
+        validTemplate,
+      );
+    });
+    await assertFails(getDoc(doc(unauthDb(), "weekly_templates", "t1")));
+  });
+
+  it("authenticated staff can read templates", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), "weekly_templates", "t1"),
+        validTemplate,
+      );
+    });
+    await assertSucceeds(getDoc(doc(staffDb(), "weekly_templates", "t1")));
+  });
+
+  it("staff cannot create a template", async () => {
+    await assertFails(
+      setDoc(doc(staffDb(), "weekly_templates", "t1"), validTemplate),
+    );
+  });
+
+  it("manager can create a template with valid fields", async () => {
+    await assertSucceeds(
+      setDoc(doc(managerDb(), "weekly_templates", "t1"), validTemplate),
+    );
+  });
+
+  it("manager cannot create a template with extra fields", async () => {
+    await assertFails(
+      setDoc(doc(managerDb(), "weekly_templates", "t1"), {
+        ...validTemplate,
+        extraField: "injection attempt",
+      }),
+    );
+  });
+
+  it("manager cannot create a template with empty name", async () => {
+    await assertFails(
+      setDoc(doc(managerDb(), "weekly_templates", "t1"), {
+        ...validTemplate,
+        name: "",
+      }),
+    );
+  });
+
+  it("manager can update a template", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), "weekly_templates", "t1"),
+        validTemplate,
+      );
+    });
+    await assertSucceeds(
+      setDoc(doc(managerDb(), "weekly_templates", "t1"), {
+        ...validTemplate,
+        name: "更新後模板",
+      }),
+    );
+  });
+
+  it("staff cannot update a template", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), "weekly_templates", "t1"),
+        validTemplate,
+      );
+    });
+    await assertFails(
+      setDoc(doc(staffDb(), "weekly_templates", "t1"), {
+        ...validTemplate,
+        name: "Staff override",
+      }),
+    );
+  });
+
+  it("manager can delete a template", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), "weekly_templates", "t1"),
+        validTemplate,
+      );
+    });
+    await assertSucceeds(
+      deleteDoc(doc(managerDb(), "weekly_templates", "t1")),
+    );
+  });
+
+  it("staff cannot delete a template", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), "weekly_templates", "t1"),
+        validTemplate,
+      );
+    });
+    await assertFails(deleteDoc(doc(staffDb(), "weekly_templates", "t1")));
+  });
+});

@@ -50,6 +50,52 @@
 
 ---
 
+## Phase 6：週班表模板系統
+
+大幅減少管理者手動排班負擔：建立可重複使用的「週班表模板」，一鍵套用至任意月份。
+
+### 設計決策
+
+| 決策 | 說明 |
+|------|------|
+| 合併策略 | Union — 模板人員加入現有，不移除 |
+| 日期對應 | 按**星期幾**（日/一/二/三/四/五/六），不按日期數字 |
+| 停用員工 | 套用時自動過濾 `isActive=false` 的員工 |
+| 月份不存在 | 目標月份不存在時自動建立（reuse `initializeBlankMonth` 邏輯） |
+| 模板範圍 | 全域共用（所有 manager 共享） |
+| Firestore 路徑 | `weekly_templates/{templateId}` |
+
+### Phase 6-A：資料層與後端
+
+- `WeeklyTemplate` 型別 — `name`, `createdBy`, `updatedAt`, `days: Record<DayOfWeek, ShiftSlots>`；新增至 `functions/src/types.ts` 及 `webapp/src/types/index.ts`
+- `firestore.rules` — `weekly_templates/{docId}`：Manager 可 CRUD、登入者可 Read
+- `applyWeeklyTemplate`（onCall Callable）— Manager 驗證 → 取模板 → 自動建月 → 按星期幾 union merge → 過濾停用員工 → batch commit
+
+### Phase 6-B：前端 UI
+
+- `useTemplates.ts` hook — real-time listener on `weekly_templates` collection
+- `TemplatePage.tsx`（`/templates`，manager only）— 左側模板列表、主區 7 欄 × 3 列格子、checkbox popover 指派員工、名稱輸入 + 儲存/刪除
+- `ApplyTemplateModal.tsx` — 選擇模板下拉、預覽摘要、Union merge 提示、呼叫 Cloud Function
+- `MonthControls.tsx` — 新增「套用模板」按鈕開啟 Modal
+- `App.tsx` / `SchedulePage.tsx` — 新增 `/templates` route 與導航連結
+
+### Phase 6-C：測試
+
+- `functions/test/functions.test.ts` — `applyWeeklyTemplate`：空月份、union merge、停用員工過濾、無效 templateId、非 manager 呼叫
+- `functions/test/rules.test.ts` — `weekly_templates`：Manager CRUD、Staff 只讀、未登入拒絕
+- `webapp/e2e/template.spec.ts` — 建立模板、套用月份、Staff 無法訪問
+
+### 驗收條件
+
+1. `cd functions && npm test` — 所有 `applyWeeklyTemplate` 及 `weekly_templates` rules 測試通過
+2. 手動：建立模板（週一早班 3 人）→ 套用到某月 → 所有週一早班均出現這 3 人
+3. 邊界：目標月不存在 → 自動建立並套用
+4. 邊界：月份已有排班 → 既有人員保留，模板人員合併加入
+5. 邊界：模板含停用員工 → 套用結果中已過濾
+6. `cd webapp && npx playwright test e2e/template.spec.ts`
+
+---
+
 ## 關鍵決策記錄
 
 | 決策                  | 說明                                                                                          |

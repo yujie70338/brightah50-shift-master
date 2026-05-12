@@ -2,11 +2,13 @@ import { useState } from "react";
 import { httpsCallable } from "firebase/functions";
 import { doc, updateDoc } from "firebase/firestore";
 import { db, functions } from "../firebase";
-import { MonthlySchedule } from "../types";
+import { MonthlySchedule, ShiftDocument } from "../types";
+import { ApplyTemplateModal } from "./ApplyTemplateModal";
 
 interface Props {
   schedule: MonthlySchedule | null;
   scheduleId: string;
+  shifts: ShiftDocument[];
   onMonthChange: (id: string) => void;
   isManager: boolean;
 }
@@ -14,12 +16,15 @@ interface Props {
 export function MonthControls({
   schedule,
   scheduleId,
+  shifts,
   onMonthChange,
   isManager,
 }: Props) {
   const [creating, setCreating] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState("");
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applySuccess, setApplySuccess] = useState("");
 
   // Month picker state — default to current month
   const today = new Date();
@@ -118,6 +123,25 @@ export function MonthControls({
         </button>
       )}
 
+      {isManager && (
+        <button
+          onClick={() => {
+            setApplySuccess("");
+            setShowApplyModal(true);
+          }}
+          style={{
+            padding: "0.4rem 0.75rem",
+            background: "#ede9fe",
+            border: "1px solid #a78bfa",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+          title="套用週班表模板"
+        >
+          套用模板
+        </button>
+      )}
+
       {isManager && schedule && (
         <button
           onClick={handleTogglePublish}
@@ -151,6 +175,26 @@ export function MonthControls({
 
       {error && (
         <span style={{ color: "red", fontSize: "0.85rem" }}>{error}</span>
+      )}
+
+      {applySuccess && (
+        <span style={{ color: "#059669", fontSize: "0.85rem" }}>
+          ✓ {applySuccess}
+        </span>
+      )}
+
+      {showApplyModal && (
+        <ApplyTemplateModal
+          scheduleId={scheduleId}
+          hasExistingShifts={shifts.some(
+            (s) =>
+              s.slots.morning.length > 0 ||
+              s.slots.afternoon.length > 0 ||
+              s.slots.evening.length > 0,
+          )}
+          onClose={() => setShowApplyModal(false)}
+          onSuccess={(msg) => setApplySuccess(msg)}
+        />
       )}
     </div>
   );

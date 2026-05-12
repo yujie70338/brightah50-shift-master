@@ -10,24 +10,43 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // vi.hoisted() executes before vi.mock() factories, making these refs available.
 const mocks = vi.hoisted(() => {
   const docGet = vi.fn();
+  const collectionGet = vi.fn(); // for top-level collection.get()
+  const subcollectionGet = vi.fn(); // for subcollection.get()
   const batchSet = vi.fn();
+  const batchUpdate = vi.fn();
   const batchCommit = vi.fn().mockResolvedValue(undefined);
 
   const subcollectionRef = {
     doc: vi.fn().mockReturnValue({}),
+    get: subcollectionGet,
   };
   const docRef = {
     get: docGet,
     collection: vi.fn().mockReturnValue(subcollectionRef),
   };
-  const collectionRef = { doc: vi.fn().mockReturnValue(docRef) };
+  const collectionRef = {
+    doc: vi.fn().mockReturnValue(docRef),
+    get: collectionGet,
+  };
 
   const db = {
     collection: vi.fn().mockReturnValue(collectionRef),
-    batch: vi.fn().mockReturnValue({ set: batchSet, commit: batchCommit }),
+    batch: vi.fn().mockReturnValue({
+      set: batchSet,
+      update: batchUpdate,
+      commit: batchCommit,
+    }),
   };
 
-  return { docGet, batchSet, batchCommit, db };
+  return {
+    docGet,
+    collectionGet,
+    subcollectionGet,
+    batchSet,
+    batchUpdate,
+    batchCommit,
+    db,
+  };
 });
 
 // ── Module mocks ────────────────────────────────────────────────────────────
@@ -65,6 +84,7 @@ import {
   beforeusersignedin,
   initializeBlankMonth,
   onShiftUpdated,
+  applyWeeklyTemplate,
 } from "../src/index.js";
 import * as logger from "firebase-functions/logger";
 
@@ -81,7 +101,10 @@ const shiftHandler = onShiftUpdated as unknown as Handler;
 // ── Reset per-call state between tests ──────────────────────────────────────
 beforeEach(() => {
   mocks.docGet.mockReset();
+  mocks.collectionGet.mockReset();
+  mocks.subcollectionGet.mockReset();
   mocks.batchSet.mockReset();
+  mocks.batchUpdate.mockReset();
   mocks.batchCommit.mockReset().mockResolvedValue(undefined);
   vi.mocked(logger.info).mockClear();
 });
@@ -302,6 +325,250 @@ describe("onShiftUpdated", () => {
       expect.stringContaining("[Published]"),
       expect.objectContaining({
         removed: expect.arrayContaining(["staff@example.com ✕ morning"]),
+      }),
+    );
+  });
+});
+
+// ============================================================================
+// applyWeeklyTemplate — Callable function
+// ============================================================================
+describe("applyWeeklyTemplate", () => {
+  const applyHandler = applyWeeklyTemplate as unknown as Handler;
+
+  const MANAGER_AUTH = {
+    uid: "manager1",
+    token: { email: "manager@example.com", role: "manager" },
+  };
+
+  // Template with staff1 assigned to every day-of-week, morning only
+  const FULL_TEMPLATE = {
+    name: "全週班",
+    days: {
+      日: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+      一: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+      二: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+      三: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+      四: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+      五: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+      六: { morning: ["staff1@example.com"], afternoon: [], evening: [] },
+    },
+  };
+
+  // Template with only inactive staff
+  const INACTIVE_TEMPLATE = {
+    name: "停用員工模板",
+    days: {
+      日: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+      一: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+      二: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+      三: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+      四: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+      五: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+      六: { morning: ["inactive@example.com"], afternoon: [], evening: [] },
+    },
+  };
+
+  const USERS_SNAP = {
+    docs: [
+      {
+        id: "staff1@example.com",
+        data: () => ({ email: "staff1@example.com", isActive: true }),
+      },
+      {
+        id: "inactive@example.com",
+        data: () => ({ email: "inactive@example.com", isActive: false }),
+      },
+    ],
+  };
+
+  const EMPTY_SHIFTS_SNAP = { docs: [] };
+
+  it("throws unauthenticated when no auth context", async () => {
+    await expect(
+      applyHandler({
+        auth: null,
+        data: { templateId: "t1", year: 2026, month: 5 },
+      }),
+    ).rejects.toMatchObject({ code: "unauthenticated" });
+  });
+
+  it("throws unauthenticated when token has no email", async () => {
+    await expect(
+      applyHandler({
+        auth: { uid: "x", token: {} },
+        data: { templateId: "t1", year: 2026, month: 5 },
+      }),
+    ).rejects.toMatchObject({ code: "unauthenticated" });
+  });
+
+  it("throws permission-denied when caller is not found in users collection", async () => {
+    mocks.docGet.mockResolvedValueOnce(snap(false));
+    await expect(
+      applyHandler({
+        auth: MANAGER_AUTH,
+        data: { templateId: "t1", year: 2026, month: 5 },
+      }),
+    ).rejects.toMatchObject({ code: "permission-denied" });
+  });
+
+  it("throws permission-denied when caller is staff", async () => {
+    mocks.docGet.mockResolvedValueOnce(snap(true, { role: "staff" }));
+    await expect(
+      applyHandler({
+        auth: MANAGER_AUTH,
+        data: { templateId: "t1", year: 2026, month: 5 },
+      }),
+    ).rejects.toMatchObject({ code: "permission-denied" });
+  });
+
+  it("throws invalid-argument when templateId is missing", async () => {
+    mocks.docGet.mockResolvedValueOnce(snap(true, { role: "manager" }));
+    await expect(
+      applyHandler({
+        auth: MANAGER_AUTH,
+        data: { year: 2026, month: 5 },
+      }),
+    ).rejects.toMatchObject({ code: "invalid-argument" });
+  });
+
+  it("throws invalid-argument for month out of range (13)", async () => {
+    mocks.docGet.mockResolvedValueOnce(snap(true, { role: "manager" }));
+    await expect(
+      applyHandler({
+        auth: MANAGER_AUTH,
+        data: { templateId: "t1", year: 2026, month: 13 },
+      }),
+    ).rejects.toMatchObject({ code: "invalid-argument" });
+  });
+
+  it("throws not-found when template does not exist", async () => {
+    mocks.docGet
+      .mockResolvedValueOnce(snap(true, { role: "manager" })) // caller
+      .mockResolvedValueOnce(snap(false)); // template missing
+    await expect(
+      applyHandler({
+        auth: MANAGER_AUTH,
+        data: { templateId: "missing-id", year: 2026, month: 5 },
+      }),
+    ).rejects.toMatchObject({ code: "not-found" });
+  });
+
+  it("auto-creates month and applies template when month does not exist", async () => {
+    mocks.docGet
+      .mockResolvedValueOnce(snap(true, { role: "manager" })) // caller
+      .mockResolvedValueOnce(snap(true, FULL_TEMPLATE)) // template
+      .mockResolvedValueOnce(snap(false)); // schedule doesn't exist
+    mocks.collectionGet.mockResolvedValueOnce(USERS_SNAP); // active users
+    mocks.subcollectionGet.mockResolvedValueOnce(EMPTY_SHIFTS_SNAP); // empty shifts
+
+    const result = await applyHandler({
+      auth: MANAGER_AUTH,
+      data: { templateId: "t1", year: 2026, month: 5 },
+    });
+
+    expect(result.scheduleId).toBe("2026-05");
+    // All 31 days get staff1 added (from empty), so all 31 are updated
+    expect(result.daysUpdated).toBe(31);
+    expect(result.staffFiltered).toHaveLength(0);
+    // batch.commit() called twice: once for month creation, once for updates
+    expect(mocks.batchCommit).toHaveBeenCalledTimes(2);
+    // 1 schedule doc + 31 shift docs created in first batch
+    expect(mocks.batchSet).toHaveBeenCalledTimes(32);
+  });
+
+  it("applies to existing month without auto-creating it", async () => {
+    mocks.docGet
+      .mockResolvedValueOnce(snap(true, { role: "manager" })) // caller
+      .mockResolvedValueOnce(snap(true, FULL_TEMPLATE)) // template
+      .mockResolvedValueOnce(snap(true, { year: 2026, month: 5 })); // schedule exists
+    mocks.collectionGet.mockResolvedValueOnce(USERS_SNAP);
+    mocks.subcollectionGet.mockResolvedValueOnce(EMPTY_SHIFTS_SNAP);
+
+    const result = await applyHandler({
+      auth: MANAGER_AUTH,
+      data: { templateId: "t1", year: 2026, month: 5 },
+    });
+
+    expect(result.scheduleId).toBe("2026-05");
+    expect(result.daysUpdated).toBe(31);
+    // Only one batch commit — the update batch, no creation batch
+    expect(mocks.batchCommit).toHaveBeenCalledTimes(1);
+    expect(mocks.batchSet).not.toHaveBeenCalled();
+  });
+
+  it("filters inactive staff and reports them in staffFiltered", async () => {
+    mocks.docGet
+      .mockResolvedValueOnce(snap(true, { role: "manager" }))
+      .mockResolvedValueOnce(snap(true, INACTIVE_TEMPLATE))
+      .mockResolvedValueOnce(snap(true, { year: 2026, month: 5 }));
+    mocks.collectionGet.mockResolvedValueOnce(USERS_SNAP);
+    mocks.subcollectionGet.mockResolvedValueOnce(EMPTY_SHIFTS_SNAP);
+
+    const result = await applyHandler({
+      auth: MANAGER_AUTH,
+      data: { templateId: "t1", year: 2026, month: 5 },
+    });
+
+    expect(result.staffFiltered).toContain("inactive@example.com");
+    // No days updated since the only template staff is inactive
+    expect(result.daysUpdated).toBe(0);
+    expect(mocks.batchUpdate).not.toHaveBeenCalled();
+  });
+
+  it("preserves existing assignments when applying (union merge)", async () => {
+    // Existing: day "01" morning has existing@example.com
+    const existingShiftDoc = {
+      id: "01",
+      data: () => ({
+        date: "2026-05-01",
+        dayOfWeek: "五",
+        slots: {
+          morning: ["existing@example.com"],
+          afternoon: [],
+          evening: [],
+        },
+      }),
+    };
+
+    mocks.docGet
+      .mockResolvedValueOnce(snap(true, { role: "manager" }))
+      .mockResolvedValueOnce(snap(true, FULL_TEMPLATE)) // staff1 on all days
+      .mockResolvedValueOnce(snap(true, { year: 2026, month: 5 }));
+    mocks.collectionGet.mockResolvedValueOnce({
+      docs: [
+        {
+          id: "staff1@example.com",
+          data: () => ({ email: "staff1@example.com", isActive: true }),
+        },
+        {
+          id: "existing@example.com",
+          data: () => ({ email: "existing@example.com", isActive: true }),
+        },
+      ],
+    });
+    mocks.subcollectionGet.mockResolvedValueOnce({
+      docs: [existingShiftDoc],
+    });
+
+    const result = await applyHandler({
+      auth: MANAGER_AUTH,
+      data: { templateId: "t1", year: 2026, month: 5 },
+    });
+
+    // All 31 days updated: day "01" gets staff1 added alongside existing@, rest get staff1
+    expect(result.daysUpdated).toBe(31);
+    expect(result.staffFiltered).toHaveLength(0);
+    // Day "01" should have both existing and template staff merged
+    expect(mocks.batchUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        slots: expect.objectContaining({
+          morning: expect.arrayContaining([
+            "existing@example.com",
+            "staff1@example.com",
+          ]),
+        }),
       }),
     );
   });

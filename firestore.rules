@@ -104,6 +104,29 @@ service cloud.firestore {
       allow delete: if isOwner(resource) || isManager();
     }
 
+    // ── weekly_templates ────────────────────────────────────────────────────
+    match /weekly_templates/{docId} {
+      // All signed-in users may read templates (staff needs to see what's applied)
+      allow read: if isSignedIn();
+
+      // Only managers may create, update, or delete templates
+      allow create: if isManager()
+        && request.resource.data.keys().hasOnly(
+          ['name', 'createdBy', 'updatedAt', 'days']
+        )
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0;
+
+      allow update: if isManager()
+        && request.resource.data.keys().hasOnly(
+          ['name', 'createdBy', 'updatedAt', 'days']
+        )
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0;
+
+      allow delete: if isManager();
+    }
+
     // ── deny everything else ────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

@@ -33,3 +33,13 @@ export interface Unavailability {
   unavailableSlots: SlotType[];
   reason?: string;
 }
+
+export type DayOfWeek = "日" | "一" | "二" | "三" | "四" | "五" | "六";
+
+export interface WeeklyTemplate {
+  id?: string;
+  name: string;
+  createdBy: string; // manager email
+  updatedAt: FirebaseFirestore.Timestamp;
+  days: Record<DayOfWeek, ShiftSlots>;
+}
