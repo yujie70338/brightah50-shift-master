@@ -24,8 +24,8 @@ function TemplatePreview({ template }: { template: WeeklyTemplate }) {
       style={{
         borderCollapse: "collapse",
         width: "100%",
-        fontSize: "0.78rem",
-        marginTop: "0.5rem",
+        fontSize: "var(--font-size-xs)",
+        marginTop: "var(--space-2)",
       }}
     >
       <thead>
@@ -60,15 +60,16 @@ function TemplatePreview({ template }: { template: WeeklyTemplate }) {
 
 const thStyle: React.CSSProperties = {
   padding: "0.3rem 0.5rem",
-  background: "#f3f4f6",
-  border: "1px solid #e5e7eb",
+  background: "var(--color-primary-light)",
+  border: "1px solid var(--color-border)",
   fontWeight: 600,
   textAlign: "center",
+  color: "var(--color-gray-700)",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "0.3rem 0.5rem",
-  border: "1px solid #e5e7eb",
+  border: "1px solid var(--color-border)",
   whiteSpace: "nowrap",
 };
 
@@ -126,7 +127,7 @@ export function ApplyTemplateModal({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.3)",
+        background: "rgba(0,0,0,0.35)",
         zIndex: 2000,
         display: "flex",
         alignItems: "center",
@@ -136,46 +137,42 @@ export function ApplyTemplateModal({
       {/* Modal box */}
       <div
         onClick={(e) => e.stopPropagation()}
+        className="card"
         style={{
-          background: "#fff",
-          borderRadius: "12px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-          padding: "1.5rem",
           width: "min(680px, 95vw)",
           maxHeight: "90vh",
           overflowY: "auto",
+          boxShadow: "var(--shadow-xl)",
+          borderRadius: "var(--radius-xl)",
+          padding: "var(--space-6)",
         }}
       >
-        <h3 style={{ marginTop: 0, marginBottom: "1rem" }}>套用週班表模板</h3>
+        <h3 className="section-title" style={{ marginTop: 0, marginBottom: "var(--space-4)" }}>套用週班表模板</h3>
 
         {/* Template selector */}
         <label
           style={{
             display: "block",
-            fontSize: "0.9rem",
+            fontSize: "var(--font-size-sm)",
             fontWeight: 600,
-            marginBottom: "0.3rem",
+            marginBottom: "var(--space-1)",
+            color: "var(--color-gray-600)",
           }}
         >
           選擇模板
         </label>
         {loading ? (
-          <p style={{ color: "#9ca3af", fontSize: "0.85rem" }}>載入中…</p>
+          <div className="loading-center"><div className="spinner" /></div>
         ) : templates.length === 0 ? (
-          <p style={{ color: "#9ca3af", fontSize: "0.85rem" }}>
+          <p style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-sm)" }}>
             尚無模板。請先至「模板管理」頁面建立。
           </p>
         ) : (
           <select
+            className="form-select"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              border: "1px solid #d1d5db",
-              borderRadius: "6px",
-              fontSize: "0.95rem",
-            }}
+            style={{ width: "100%" }}
           >
             <option value="">— 請選擇 —</option>
             {templates.map((t) => (
@@ -188,13 +185,13 @@ export function ApplyTemplateModal({
 
         {/* Preview */}
         {selectedTemplate && (
-          <div style={{ marginTop: "1rem" }}>
+          <div style={{ marginTop: "var(--space-4)" }}>
             <p
               style={{
-                fontSize: "0.85rem",
+                fontSize: "var(--font-size-sm)",
                 fontWeight: 600,
-                marginBottom: "0.3rem",
-                color: "#374151",
+                marginBottom: "var(--space-1)",
+                color: "var(--color-gray-600)",
               }}
             >
               預覽（每週各時段人數）
@@ -205,61 +202,30 @@ export function ApplyTemplateModal({
 
         {/* Warning if month already has data */}
         {hasExistingShifts && (
-          <div
-            style={{
-              marginTop: "1rem",
-              padding: "0.6rem 0.75rem",
-              background: "#fffbeb",
-              border: "1px solid #fcd34d",
-              borderRadius: "6px",
-              fontSize: "0.85rem",
-              color: "#92400e",
-            }}
-          >
+          <div className="alert alert-warning" style={{ marginTop: "var(--space-4)" }}>
             ⚠ 此月份已有排班。套用模板將以<strong>合併模式</strong>
             加入人員，不會移除現有排班。
           </div>
         )}
 
         {error && (
-          <p style={{ color: "red", fontSize: "0.85rem", marginTop: "0.5rem" }}>
-            {error}
-          </p>
+          <p className="alert alert-error" style={{ marginTop: "var(--space-2)" }}>{error}</p>
         )}
 
         {/* Actions */}
         <div
           style={{
             display: "flex",
-            gap: "0.5rem",
+            gap: "var(--space-2)",
             justifyContent: "flex-end",
-            marginTop: "1.25rem",
+            marginTop: "var(--space-5)",
           }}
         >
+          <button className="btn btn-ghost" onClick={onClose}>取消</button>
           <button
-            onClick={onClose}
-            style={{
-              padding: "0.5rem 1rem",
-              background: "#f3f4f6",
-              border: "1px solid #d1d5db",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
-            取消
-          </button>
-          <button
+            className="btn btn-primary"
             onClick={handleApply}
             disabled={applying || !selectedId}
-            style={{
-              padding: "0.5rem 1.25rem",
-              background: applying || !selectedId ? "#9ca3af" : "#2563eb",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: applying || !selectedId ? "not-allowed" : "pointer",
-              fontWeight: 600,
-            }}
           >
             {applying ? "套用中…" : "確認套用"}
           </button>

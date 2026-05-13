@@ -79,41 +79,23 @@ function CellPopover({
   return (
     <div
       ref={ref}
+      className="popover"
       onClick={(e) => e.stopPropagation()}
       style={{
-        position: "absolute",
         top: flipUp ? "auto" : "100%",
         bottom: flipUp ? "100%" : "auto",
         left: 0,
-        zIndex: 1000,
-        background: "#fff",
-        border: "1px solid #d1d5db",
-        borderRadius: "8px",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-        padding: "0.5rem",
-        minWidth: "160px",
-        maxHeight: "280px",
-        overflowY: "auto",
       }}
     >
       {activeUsers.length === 0 && (
-        <p style={{ fontSize: "0.8rem", color: "#9ca3af", margin: 0 }}>
+        <p style={{ fontSize: "var(--font-size-xs)", color: "var(--color-gray-400)", margin: 0 }}>
           尚無員工
         </p>
       )}
       {activeUsers.map((u) => (
         <label
           key={u.email}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            padding: "0.2rem 0.3rem",
-            borderRadius: "4px",
-            cursor: "pointer",
-            background: assignedSet.has(u.email) ? "#eff6ff" : "transparent",
-            fontSize: "0.82rem",
-          }}
+          className={`popover-item${assignedSet.has(u.email) ? " selected" : ""}`}
         >
           <input
             type="checkbox"
@@ -226,46 +208,35 @@ export function TemplatePage() {
   };
 
   return (
-    <div style={{ padding: "1rem", maxWidth: "1100px", margin: "0 auto" }}>
-      <Navbar title="週班表模板管理" />
-      <p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1rem" }}>
-        建立可重複套用的週班表模板，再從排班頁一鍵套用至任意月份。
-      </p>
-      <p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1rem" }}>
+    <>
+      <Navbar title="萊特動物醫院 - 內部排班" />
+    <div className="page-wrapper">
+      <p style={{ color: "var(--color-gray-500)", fontSize: "var(--font-size-sm)", marginBottom: "var(--space-4)" }}>
         建立可重複套用的週班表模板，再從排班頁一鍵套用至任意月份。
       </p>
 
-      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
         {/* ── 左側：模板列表 ── */}
         <div
           style={{
             width: "200px",
             flexShrink: 0,
-            background: "#f9fafb",
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
-            padding: "0.5rem",
+            background: "var(--color-secondary-subtle)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            padding: "var(--space-2)",
           }}
         >
           <button
+            className="btn btn-primary"
             onClick={handleNew}
-            style={{
-              width: "100%",
-              padding: "0.4rem",
-              marginBottom: "0.5rem",
-              background: "#2563eb",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
+            style={{ width: "100%", marginBottom: "var(--space-2)" }}
           >
             ＋ 新增模板
           </button>
 
           {loading && (
-            <p style={{ fontSize: "0.85rem", color: "#9ca3af" }}>載入中…</p>
+            <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-gray-400)" }}>載入中…</p>
           )}
           {templates.map((t) => (
             <div
@@ -273,17 +244,14 @@ export function TemplatePage() {
               onClick={() => loadTemplate(t)}
               style={{
                 padding: "0.4rem 0.6rem",
-                borderRadius: "6px",
+                borderRadius: "var(--radius-sm)",
                 cursor: "pointer",
-                background:
-                  t.id === selectedId ? "#dbeafe" : "transparent",
+                background: t.id === selectedId ? "var(--color-primary-light)" : "transparent",
                 fontWeight: t.id === selectedId ? 600 : 400,
-                fontSize: "0.88rem",
-                marginBottom: "0.2rem",
-                border:
-                  t.id === selectedId
-                    ? "1px solid #93c5fd"
-                    : "1px solid transparent",
+                fontSize: "var(--font-size-sm)",
+                marginBottom: "var(--space-1)",
+                border: t.id === selectedId ? "1px solid var(--color-primary)" : "1px solid transparent",
+                color: "var(--color-gray-700)",
               }}
             >
               {t.name}
@@ -297,57 +265,29 @@ export function TemplatePage() {
           <div
             style={{
               display: "flex",
-              gap: "0.5rem",
+              gap: "var(--space-2)",
               alignItems: "center",
-              marginBottom: "1rem",
+              marginBottom: "var(--space-4)",
             }}
           >
             <input
+              className="form-input"
               type="text"
               placeholder="模板名稱（例：標準週班表）"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "0.5rem 0.75rem",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "1rem",
-              }}
+              style={{ flex: 1 }}
             />
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                padding: "0.5rem 1rem",
-                background: "#10b981",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                cursor: saving ? "not-allowed" : "pointer",
-                fontWeight: 600,
-              }}
-            >
+            <button className="btn btn-success" onClick={handleSave} disabled={saving}>
               {saving ? "儲存中…" : "儲存"}
             </button>
             {selectedId && (
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                style={{
-                  padding: "0.5rem 0.75rem",
-                  background: "#fee2e2",
-                  color: "#dc2626",
-                  border: "1px solid #fca5a5",
-                  borderRadius: "6px",
-                  cursor: deleting ? "not-allowed" : "pointer",
-                }}
-              >
+              <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? "刪除中…" : "刪除"}
               </button>
             )}
             {error && (
-              <span style={{ color: "red", fontSize: "0.85rem" }}>{error}</span>
+              <span style={{ color: "var(--color-danger)", fontSize: "var(--font-size-sm)" }}>{error}</span>
             )}
           </div>
 
@@ -357,7 +297,7 @@ export function TemplatePage() {
               style={{
                 borderCollapse: "collapse",
                 width: "100%",
-                fontSize: "0.85rem",
+                fontSize: "var(--font-size-sm)",
               }}
             >
               <thead>
@@ -365,8 +305,9 @@ export function TemplatePage() {
                   <th
                     style={{
                       padding: "0.4rem 0.6rem",
-                      background: "#f3f4f6",
-                      border: "1px solid #e5e7eb",
+                      background: "var(--color-primary-light)",
+                      border: "1px solid var(--color-border)",
+                      borderBottom: "2px solid var(--color-primary)",
                       width: "100px",
                     }}
                   >
@@ -377,10 +318,12 @@ export function TemplatePage() {
                       key={d}
                       style={{
                         padding: "0.4rem 0.6rem",
-                        background: "#f3f4f6",
-                        border: "1px solid #e5e7eb",
+                        background: "var(--color-primary-light)",
+                        border: "1px solid var(--color-border)",
+                        borderBottom: "2px solid var(--color-primary)",
                         textAlign: "center",
                         fontWeight: 600,
+                        color: "var(--color-gray-700)",
                       }}
                     >
                       週{d}
@@ -394,10 +337,11 @@ export function TemplatePage() {
                     <td
                       style={{
                         padding: "0.4rem 0.6rem",
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid var(--color-border)",
                         fontWeight: 600,
-                        background: "#f9fafb",
+                        background: "var(--color-secondary-subtle)",
                         whiteSpace: "nowrap",
+                        color: "var(--color-gray-600)",
                       }}
                     >
                       {label}
@@ -411,7 +355,7 @@ export function TemplatePage() {
                           key={day}
                           style={{
                             padding: "0.3rem",
-                            border: "1px solid #e5e7eb",
+                            border: "1px solid var(--color-border)",
                             verticalAlign: "top",
                             position: "relative",
                           }}
@@ -423,19 +367,19 @@ export function TemplatePage() {
                             style={{
                               minHeight: "48px",
                               cursor: "pointer",
-                              borderRadius: "4px",
+                              borderRadius: "var(--radius-sm)",
                               padding: "0.2rem",
-                              background: isOpen ? "#eff6ff" : "transparent",
+                              background: isOpen ? "var(--color-primary-subtle)" : "transparent",
                               border: isOpen
-                                ? "1px solid #93c5fd"
-                                : "1px dashed #d1d5db",
+                                ? "1px solid var(--color-primary)"
+                                : "1px dashed var(--color-border)",
                             }}
                           >
                             {assigned.length === 0 ? (
                               <span
                                 style={{
-                                  color: "#9ca3af",
-                                  fontSize: "0.78rem",
+                                  color: "var(--color-gray-400)",
+                                  fontSize: "var(--font-size-xs)",
                                 }}
                               >
                                 點擊指派
@@ -447,13 +391,14 @@ export function TemplatePage() {
                                   <div
                                     key={email}
                                     style={{
-                                      fontSize: "0.78rem",
-                                      background: "#dbeafe",
-                                      borderRadius: "3px",
+                                      fontSize: "var(--font-size-xs)",
+                                      background: "var(--color-primary-light)",
+                                      borderRadius: "var(--radius-sm)",
                                       padding: "1px 4px",
                                       marginBottom: "2px",
                                       display: "inline-block",
                                       marginRight: "2px",
+                                      color: "var(--color-gray-700)",
                                     }}
                                   >
                                     {u?.displayName ?? email}
@@ -483,5 +428,6 @@ export function TemplatePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

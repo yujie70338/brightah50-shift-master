@@ -1,0 +1,85 @@
+/* ──────────────────────────────────────────────
+   萊特動物醫院 Design Tokens
+   Brand colors extracted from logo:
+     Primary  – Golden Yellow  #D4A843
+     Secondary – Warm Taupe    #9B8B7A
+   ────────────────────────────────────────────── */
+
+:root {
+  /* ── Primary: Golden Yellow ── */
+  --color-primary:         #D4A843;
+  --color-primary-dark:    #B8912E;
+  --color-primary-darker:  #9A7820;
+  --color-primary-light:   #FBF3E0;
+  --color-primary-subtle:  #FEF9EE;
+
+  /* ── Secondary: Warm Taupe ── */
+  --color-secondary:       #9B8B7A;
+  --color-secondary-dark:  #7A6D60;
+  --color-secondary-light: #EDE8E3;
+  --color-secondary-subtle:#F7F4F1;
+
+  /* ── Semantic ── */
+  --color-success:         #10b981;
+  --color-success-bg:      #d1fae5;
+  --color-success-border:  #6ee7b7;
+  --color-warning:         #f59e0b;
+  --color-warning-bg:      #fef3c7;
+  --color-warning-border:  #fcd34d;
+  --color-danger:          #dc2626;
+  --color-danger-bg:       #fee2e2;
+  --color-danger-border:   #fca5a5;
+  --color-danger-dark:     #b91c1c;
+
+  /* ── Neutral (warm-tinted grays) ── */
+  --color-gray-50:   #FDFBF7;
+  --color-gray-100:  #F5F1EC;
+  --color-gray-200:  #EDE8E3;
+  --color-gray-300:  #DDD5CA;
+  --color-gray-400:  #C4B9AC;
+  --color-gray-500:  #9B8B7A;
+  --color-gray-600:  #7A6D60;
+  --color-gray-700:  #5A5048;
+  --color-gray-800:  #3D3530;
+  --color-gray-900:  #231F1B;
+
+  /* ── Surface / Background ── */
+  --color-bg:        #FDFBF7;
+  --color-surface:   #FFFFFF;
+  --color-border:    #DDD5CA;
+  --color-border-light: #EDE8E3;
+
+  /* ── Typography ── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC",
+               "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-size-xs:   0.72rem;
+  --font-size-sm:   0.825rem;
+  --font-size-base: 0.9rem;
+  --font-size-md:   1rem;
+  --font-size-lg:   1.125rem;
+  --font-size-xl:   1.375rem;
+
+  /* ── Spacing ── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+
+  /* ── Border radius ── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-xs:  0 1px 2px rgba(60, 45, 20, 0.06);
+  --shadow-sm:  0 1px 4px rgba(60, 45, 20, 0.10);
+  --shadow-md:  0 4px 12px rgba(60, 45, 20, 0.12);
+  --shadow-lg:  0 8px 24px rgba(60, 45, 20, 0.14);
+  --shadow-xl:  0 16px 40px rgba(60, 45, 20, 0.16);
+}

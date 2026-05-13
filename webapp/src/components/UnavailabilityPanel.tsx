@@ -104,83 +104,79 @@ export function UnavailabilityPanel({
   return (
     <div
       style={{
-        marginTop: "1.5rem",
-        padding: "1rem",
-        background: "#fffbeb",
-        borderRadius: "8px",
-        border: "1px solid #fcd34d",
+        marginTop: "var(--space-6)",
+        padding: "var(--space-4)",
+        background: "var(--color-warning-bg)",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid var(--color-warning-border)",
       }}
     >
-      <h3 style={{ marginTop: 0 }}>提報不可上班時間</h3>
+      <h3 className="section-title" style={{ marginTop: 0 }}>提報不可上班時間</h3>
 
       <form
         onSubmit={handleSubmit}
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: "0.5rem",
+          gap: "var(--space-2)",
           alignItems: "flex-end",
-          marginBottom: "1rem",
+          marginBottom: "var(--space-4)",
         }}
       >
         {/* Month picker */}
         <select
+          className="form-select"
           value={pickerYear}
           onChange={(e) => {
             setPickerYear(Number(e.target.value));
             setSelectedDate("");
           }}
-          style={{ padding: "0.4rem" }}
         >
           {years.map((y) => (
-            <option key={y} value={y}>
-              {y} 年
-            </option>
+            <option key={y} value={y}>{y} 年</option>
           ))}
         </select>
         <select
+          className="form-select"
           value={pickerMonth}
           onChange={(e) => {
             setPickerMonth(Number(e.target.value));
             setSelectedDate("");
           }}
-          style={{ padding: "0.4rem" }}
         >
           {months.map((m) => (
-            <option key={m} value={m}>
-              {m} 月
-            </option>
+            <option key={m} value={m}>{m} 月</option>
           ))}
         </select>
 
         <select
+          className="form-select"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          style={{ padding: "0.4rem" }}
         >
           <option value="">— 選擇日期 —</option>
           {dateOptions.map((d) => (
-            <option key={d} value={d}>
-              {d.slice(-2)} 日
-            </option>
+            <option key={d} value={d}>{d.slice(-2)} 日</option>
           ))}
         </select>
 
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div style={{ display: "flex", gap: "var(--space-3)" }}>
           {SLOTS.map((slot) => (
             <label
               key={slot}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.25rem",
+                gap: "var(--space-1)",
                 cursor: "pointer",
+                fontSize: "var(--font-size-sm)",
               }}
             >
               <input
                 type="checkbox"
                 checked={selectedSlots.includes(slot)}
                 onChange={() => toggleSlot(slot)}
+                style={{ accentColor: "var(--color-primary)" }}
               />
               {SLOT_LABELS[slot]}
             </label>
@@ -188,43 +184,29 @@ export function UnavailabilityPanel({
         </div>
 
         <input
+          className="form-input"
           placeholder="原因（選填）"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          style={{ padding: "0.4rem", flex: "1 1 150px" }}
+          style={{ flex: "1 1 150px" }}
         />
 
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{ padding: "0.4rem 1rem" }}
-        >
+        <button className="btn btn-primary btn-sm" type="submit" disabled={submitting}>
           {submitting ? "提交中…" : "提交"}
         </button>
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="alert alert-error">{error}</p>}
 
       {myUnavailability.length > 0 && (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-          }}
-        >
+        <div className="table-wrapper">
+        <table className="table">
           <thead>
-            <tr style={{ borderBottom: "1px solid #fcd34d" }}>
-              <th style={{ textAlign: "left", padding: "0.25rem 0.5rem" }}>
-                日期
-              </th>
-              <th style={{ textAlign: "left", padding: "0.25rem 0.5rem" }}>
-                時段
-              </th>
-              <th style={{ textAlign: "left", padding: "0.25rem 0.5rem" }}>
-                原因
-              </th>
-              <th style={{ padding: "0.25rem 0.5rem" }}>操作</th>
+            <tr>
+              <th>日期</th>
+              <th>時段</th>
+              <th>原因</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -238,6 +220,7 @@ export function UnavailabilityPanel({
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -267,15 +250,15 @@ function UnavailabilityRow({
   };
 
   return (
-    <tr style={{ borderBottom: "1px solid #fef3c7" }}>
-      <td style={{ padding: "0.25rem 0.5rem" }}>{entry.date.slice(-2)} 日</td>
-      <td style={{ padding: "0.25rem 0.5rem" }}>
+    <tr>
+      <td>{entry.date.slice(-2)} 日</td>
+      <td>
         {editing ? (
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "var(--space-2)" }}>
             {(["morning", "afternoon", "evening"] as SlotType[]).map((s) => (
               <label
                 key={s}
-                style={{ display: "flex", gap: "0.2rem", alignItems: "center" }}
+                style={{ display: "flex", gap: "var(--space-1)", alignItems: "center" }}
               >
                 <input
                   type="checkbox"
@@ -294,9 +277,10 @@ function UnavailabilityRow({
             .join("、")
         )}
       </td>
-      <td style={{ padding: "0.25rem 0.5rem" }}>
+      <td>
         {editing ? (
           <input
+            className="form-input"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             style={{ width: "100%" }}
@@ -305,18 +289,16 @@ function UnavailabilityRow({
           (entry.reason ?? "—")
         )}
       </td>
-      <td style={{ padding: "0.25rem 0.5rem", display: "flex", gap: "0.5rem" }}>
+      <td style={{ display: "flex", gap: "var(--space-2)" }}>
         {editing ? (
           <>
-            <button onClick={save}>儲存</button>
-            <button onClick={() => setEditing(false)}>取消</button>
+            <button className="btn btn-primary btn-xs" onClick={save}>儲存</button>
+            <button className="btn btn-ghost btn-xs" onClick={() => setEditing(false)}>取消</button>
           </>
         ) : (
           <>
-            <button onClick={() => setEditing(true)}>修改</button>
-            <button onClick={onDelete} style={{ color: "red" }}>
-              刪除
-            </button>
+            <button className="btn btn-ghost btn-xs" onClick={() => setEditing(true)}>修改</button>
+            <button className="btn btn-danger btn-xs" onClick={onDelete}>刪除</button>
           </>
         )}
       </td>

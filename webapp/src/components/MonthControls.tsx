@@ -76,23 +76,12 @@ export function MonthControls({
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "0.5rem",
-        alignItems: "center",
-        marginBottom: "1rem",
-        padding: "0.75rem",
-        background: "#f0f4ff",
-        borderRadius: "8px",
-      }}
-    >
+    <div className="toolbar-bar">
       {/* Month picker — auto-loads on change */}
       <select
+        className="form-select"
         value={pickerYear}
         onChange={(e) => handleYearChange(Number(e.target.value))}
-        style={{ padding: "0.4rem" }}
       >
         {years.map((y) => (
           <option key={y} value={y}>
@@ -101,9 +90,9 @@ export function MonthControls({
         ))}
       </select>
       <select
+        className="form-select"
         value={pickerMonth}
         onChange={(e) => handleMonthChange(Number(e.target.value))}
-        style={{ padding: "0.4rem" }}
       >
         {months.map((m) => (
           <option key={m} value={m}>
@@ -114,9 +103,9 @@ export function MonthControls({
 
       {isManager && (
         <button
+          className="btn btn-ghost btn-sm"
           onClick={handleCreate}
           disabled={creating}
-          style={{ padding: "0.4rem 0.75rem" }}
           title="建立空白月份（管理員）"
         >
           {creating ? "建立中…" : "建立新月份"}
@@ -125,16 +114,10 @@ export function MonthControls({
 
       {isManager && (
         <button
+          className="btn btn-secondary btn-sm"
           onClick={() => {
             setApplySuccess("");
             setShowApplyModal(true);
-          }}
-          style={{
-            padding: "0.4rem 0.75rem",
-            background: "#ede9fe",
-            border: "1px solid #a78bfa",
-            borderRadius: "4px",
-            cursor: "pointer",
           }}
           title="套用週班表模板"
         >
@@ -144,14 +127,13 @@ export function MonthControls({
 
       {isManager && schedule && (
         <button
+          className={`btn btn-sm ${schedule.isPublished ? "btn-warning" : "btn-success"}`}
           onClick={handleTogglePublish}
           disabled={toggling}
           style={{
-            padding: "0.4rem 0.75rem",
-            background: schedule.isPublished ? "#fef3c7" : "#d1fae5",
-            border: "1px solid",
-            borderColor: schedule.isPublished ? "#f59e0b" : "#10b981",
-            borderRadius: "4px",
+            background: schedule.isPublished ? "var(--color-warning-bg)" : "var(--color-success-bg)",
+            color: schedule.isPublished ? "#92400e" : "var(--color-success)",
+            borderColor: schedule.isPublished ? "var(--color-warning-border)" : "var(--color-success-border)",
           }}
         >
           {toggling ? "更新中…" : schedule.isPublished ? "取消發布" : "發布"}
@@ -159,26 +141,15 @@ export function MonthControls({
       )}
 
       {schedule?.isPublished && (
-        <span
-          style={{
-            padding: "0.25rem 0.75rem",
-            background: "#10b981",
-            color: "#fff",
-            borderRadius: "12px",
-            fontSize: "0.85rem",
-            fontWeight: 600,
-          }}
-        >
-          正式版本
-        </span>
+        <span className="badge badge-success">正式版本</span>
       )}
 
       {error && (
-        <span style={{ color: "red", fontSize: "0.85rem" }}>{error}</span>
+        <span style={{ color: "var(--color-danger)", fontSize: "var(--font-size-sm)" }}>{error}</span>
       )}
 
       {applySuccess && (
-        <span style={{ color: "#059669", fontSize: "0.85rem" }}>
+        <span style={{ color: "var(--color-success)", fontSize: "var(--font-size-sm)" }}>
           ✓ {applySuccess}
         </span>
       )}

@@ -65,93 +65,67 @@ export function UnavailabilityListPage() {
   };
 
   return (
-    <div style={{ padding: "1rem", maxWidth: "900px", margin: "0 auto" }}>
-      <Navbar title="請假申請" />
+    <>
+      <Navbar title="萊特動物醫院 - 內部排班" />
+    <div className="page-wrapper" style={{ maxWidth: "900px" }}>
 
       {/* Month picker */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          alignItems: "center",
-          marginBottom: "1rem",
-          padding: "0.75rem",
-          background: "#f0f4ff",
-          borderRadius: "8px",
-        }}
-      >
+      <div className="toolbar-bar" style={{ marginBottom: "var(--space-4)" }}>
         <select
+          className="form-select"
           value={pickerYear}
           onChange={(e) => setPickerYear(Number(e.target.value))}
-          style={{ padding: "0.4rem" }}
         >
           {years.map((y) => (
-            <option key={y} value={y}>
-              {y} 年
-            </option>
+            <option key={y} value={y}>{y} 年</option>
           ))}
         </select>
         <select
+          className="form-select"
           value={pickerMonth}
           onChange={(e) => setPickerMonth(Number(e.target.value))}
-          style={{ padding: "0.4rem" }}
         >
           {months.map((m) => (
-            <option key={m} value={m}>
-              {m} 月
-            </option>
+            <option key={m} value={m}>{m} 月</option>
           ))}
         </select>
-        <span style={{ color: "#555", fontSize: "0.9rem" }}>
+        <span style={{ color: "var(--color-gray-500)", fontSize: "var(--font-size-sm)" }}>
           共 {entries.length} 筆
         </span>
       </div>
 
-      {loading && <div style={{ color: "#888" }}>載入中…</div>}
+      {loading && <div className="loading-center"><div className="spinner" /></div>}
 
       {!loading && entries.length === 0 && (
-        <div style={{ color: "#888" }}>此月份無請假紀錄</div>
+        <div style={{ color: "var(--color-gray-400)" }}>此月份無請假紀錄</div>
       )}
 
       {!loading && entries.length > 0 && (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-          }}
-        >
+        <div className="table-wrapper">
+        <table className="table">
           <thead>
-            <tr style={{ background: "#f0f4ff" }}>
-              <th style={thStyle}>日期</th>
-              {isManager && <th style={thStyle}>姓名</th>}
-              <th style={thStyle}>不可上班班別</th>
-              <th style={thStyle}>原因</th>
-              <th style={thStyle}>操作</th>
+            <tr>
+              <th>日期</th>
+              {isManager && <th>姓名</th>}
+              <th>不可上班班別</th>
+              <th>原因</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={tdStyle}>{e.date}</td>
-                {isManager && <td style={tdStyle}>{e.userDisplayName}</td>}
-                <td style={tdStyle}>
+              <tr key={e.id}>
+                <td>{e.date}</td>
+                {isManager && <td>{e.userDisplayName}</td>}
+                <td>
                   {e.unavailableSlots.map((s) => SLOT_LABELS[s]).join("、")}
                 </td>
-                <td style={tdStyle}>{e.reason ?? "—"}</td>
-                <td style={tdStyle}>
+                <td>{e.reason ?? "—"}</td>
+                <td>
                   {(isManager || e.userId === myEmail) && (
                     <button
+                      className="btn btn-danger btn-xs"
                       onClick={() => handleDelete(e.id!)}
-                      style={{
-                        padding: "0.2rem 0.6rem",
-                        color: "#b91c1c",
-                        background: "transparent",
-                        border: "1px solid #fca5a5",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "0.8rem",
-                      }}
                     >
                       刪除
                     </button>
@@ -161,19 +135,9 @@ export function UnavailabilityListPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
+    </>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
-  textAlign: "left",
-  fontWeight: 600,
-  borderBottom: "2px solid #ddd",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
-  verticalAlign: "middle",
-};

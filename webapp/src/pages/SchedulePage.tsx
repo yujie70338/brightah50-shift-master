@@ -23,9 +23,10 @@ export function SchedulePage() {
   const myUnavailability = unavailability.filter((u) => u.userId === myEmail);
 
   return (
-    <div style={{ padding: "1rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <Navbar title="排班系統" />
+    <>
+      <Navbar title="萊特動物醫院 - 內部排班" />
 
+    <div className="page-wrapper">
       {/* Month controls (manager sees create/publish; all see month picker) */}
       <MonthControls
         schedule={schedule}
@@ -45,10 +46,10 @@ export function SchedulePage() {
         }}
       >
         {loading && (
-          <span style={{ color: "#888", fontSize: "0.85rem" }}>載入中…</span>
+          <span style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-sm)" }}>載入中…</span>
         )}
         {!loading && !schedule && (
-          <span style={{ color: "#888", fontSize: "0.85rem" }}>
+          <span style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-sm)" }}>
             此月份尚未建立{isManager ? "，請點「建立新月份」" : ""}
           </span>
         )}
@@ -76,7 +77,7 @@ export function SchedulePage() {
             />
           )
         ) : (
-          <p style={{ color: "#888", fontSize: "0.9rem" }}>尚未發布</p>
+          <p style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-base)" }}>尚未發布</p>
         ))}
 
       {/* Staff: unavailability submission */}
@@ -89,6 +90,7 @@ export function SchedulePage() {
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -130,7 +132,7 @@ function ReadOnlyBoard({
         style={{ borderCollapse: "collapse", minWidth: "600px", width: "100%" }}
       >
         <thead>
-          <tr style={{ background: "#f0f4ff" }}>
+          <tr style={{ background: "var(--color-primary-light)" }}>
             <th style={thStyle}>日期</th>
             {SLOTS.map((s) => (
               <th key={s} style={thStyle}>
@@ -141,14 +143,14 @@ function ReadOnlyBoard({
         </thead>
         <tbody>
           {shifts.map((shift) => (
-            <tr key={shift.date} style={{ borderBottom: "1px solid #eee" }}>
+            <tr key={shift.date} style={{ borderBottom: "1px solid var(--color-border-light)" }}>
               <td style={{ ...tdStyle, fontWeight: 600 }}>
                 {shift.date.slice(-2)}
                 <span
                   style={{
-                    color: "#888",
+                    color: "var(--color-gray-400)",
                     fontWeight: 400,
-                    marginLeft: "0.25rem",
+                    marginLeft: "var(--space-1)",
                   }}
                 >
                   ({shift.dayOfWeek})
@@ -168,13 +170,13 @@ function ReadOnlyBoard({
                           display: "inline-block",
                           margin: "2px",
                           padding: "2px 8px",
-                          background: "#fff",
+                          background: "var(--color-surface)",
                           border: conflict
-                            ? "2px solid #f59e0b"
-                            : "1px solid #ddd",
-                          borderRadius: "12px",
-                          fontSize: "0.8rem",
-                          color: user?.isActive ? "#222" : "#aaa",
+                            ? "2px solid var(--color-warning)"
+                            : "1px solid var(--color-border)",
+                          borderRadius: "var(--radius-full)",
+                          fontSize: "var(--font-size-xs)",
+                          color: user?.isActive ? "var(--color-gray-700)" : "var(--color-gray-400)",
                           opacity: user?.isActive ? 1 : 0.6,
                         }}
                       >
@@ -182,7 +184,7 @@ function ReadOnlyBoard({
                         {conflict && (
                           <span
                             title="已提報不可上班"
-                            style={{ color: "#f59e0b" }}
+                            style={{ color: "var(--color-warning)" }}
                           >
                             {" "}
                             ⚠
@@ -202,11 +204,13 @@ function ReadOnlyBoard({
 }
 
 const thStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
+  padding: "0.55rem 0.75rem",
   textAlign: "left",
   fontWeight: 600,
-  fontSize: "0.85rem",
-  borderBottom: "2px solid #c7d2fe",
+  fontSize: "var(--font-size-sm)",
+  background: "var(--color-primary-light)",
+  borderBottom: "2px solid var(--color-primary)",
+  color: "var(--color-gray-700)",
 };
 
 const tdStyle: React.CSSProperties = {

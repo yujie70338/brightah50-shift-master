@@ -75,97 +75,100 @@ export function AdminPage() {
   };
 
   return (
-    <div style={{ padding: "1rem", maxWidth: "800px", margin: "0 auto" }}>
-      <Navbar title="管理後台" />
+    <>
+      <Navbar title="萊特動物醫院 - 內部排班" />
+    <div className="page-wrapper" style={{ maxWidth: "860px" }}>
 
-      <section style={{ marginBottom: "2rem" }}>
-        <h2>新增員工</h2>
+      <section style={{ marginBottom: "var(--space-8)" }}>
+        <h2 className="section-title">新增員工</h2>
+        <div className="card">
         <form
           onSubmit={handleAddUser}
           noValidate
-          style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
+          style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}
         >
           <input
+            className="form-input"
             placeholder="Email"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
             type="email"
             required
-            style={{ padding: "0.4rem", flex: "1 1 200px" }}
+            style={{ flex: "1 1 200px" }}
           />
           <input
+            className="form-input"
             placeholder="姓名"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             required
-            style={{ padding: "0.4rem", flex: "1 1 150px" }}
+            style={{ flex: "1 1 150px" }}
           />
           <select
+            className="form-select"
             value={newRole}
             onChange={(e) => setNewRole(e.target.value as "manager" | "staff")}
-            style={{ padding: "0.4rem" }}
           >
             <option value="staff">員工</option>
             <option value="manager">管理員</option>
           </select>
           <button
+            className="btn btn-primary"
             type="submit"
             disabled={submitting}
-            style={{ padding: "0.4rem 1rem" }}
           >
             {submitting ? "新增中…" : "新增"}
           </button>
         </form>
-        {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
+        </div>
+        {error && <p className="alert alert-error" style={{ marginTop: "var(--space-2)" }}>{error}</p>}
       </section>
 
       <section>
-        <h2>成員列表</h2>
+        <h2 className="section-title">成員列表</h2>
         {loading ? (
-          <p>載入中…</p>
+          <div className="loading-center"><div className="spinner" /></div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div className="table-wrapper">
+          <table className="table">
             <thead>
-              <tr style={{ borderBottom: "2px solid #ccc", textAlign: "left" }}>
-                <th style={{ padding: "0.5rem" }}>姓名</th>
-                <th style={{ padding: "0.5rem" }}>Email</th>
-                <th style={{ padding: "0.5rem" }}>角色</th>
-                <th style={{ padding: "0.5rem" }}>狀態</th>
-                <th style={{ padding: "0.5rem" }}>操作</th>
+              <tr>
+                <th>姓名</th>
+                <th>Email</th>
+                <th>角色</th>
+                <th>狀態</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr
                   key={u.email}
-                  style={{
-                    borderBottom: "1px solid #eee",
-                    opacity: u.isActive ? 1 : 0.5,
-                  }}
+                  style={{ opacity: u.isActive ? 1 : 0.5 }}
                 >
-                  <td style={{ padding: "0.5rem" }}>{u.displayName}</td>
-                  <td style={{ padding: "0.5rem" }}>{u.email}</td>
-                  <td style={{ padding: "0.5rem" }}>
-                    {u.role === "manager" ? "管理員" : "員工"}
+                  <td>{u.displayName}</td>
+                  <td style={{ fontSize: "var(--font-size-sm)", color: "var(--color-gray-500)" }}>{u.email}</td>
+                  <td>
+                    <span className={`badge ${u.role === "manager" ? "badge-primary" : "badge-secondary"}`}>
+                      {u.role === "manager" ? "管理員" : "員工"}
+                    </span>
                   </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    {u.isActive ? "啟用" : "停用"}
+                  <td>
+                    <span className={`badge ${u.isActive ? "badge-success" : "badge-secondary"}`}>
+                      {u.isActive ? "啟用" : "停用"}
+                    </span>
                   </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    <div style={{ display: "flex", gap: "0.4rem" }}>
-                      <button onClick={() => toggleActive(u.email, u.isActive)}>
+                  <td>
+                    <div style={{ display: "flex", gap: "var(--space-2)" }}>
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        onClick={() => toggleActive(u.email, u.isActive)}
+                      >
                         {u.isActive ? "停用" : "啟用"}
                       </button>
                       <button
+                        className="btn btn-danger btn-xs"
                         onClick={() => handleDeleteUser(u.email, u.displayName)}
-                        style={{
-                          background: "#fee2e2",
-                          color: "#dc2626",
-                          border: "1px solid #fca5a5",
-                          borderRadius: "4px",
-                          padding: "0.2rem 0.5rem",
-                          cursor: "pointer",
-                        }}
                       >
                         刪除
                       </button>
@@ -175,8 +178,10 @@ export function AdminPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>
+    </>
   );
 }

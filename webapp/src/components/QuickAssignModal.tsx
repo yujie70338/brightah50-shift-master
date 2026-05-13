@@ -126,50 +126,19 @@ export function QuickAssignModal({
   return (
     <div
       ref={ref}
-      style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        zIndex: 1000,
-        background: "#fff",
-        border: "1px solid #d1d5db",
-        borderRadius: "8px",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-        padding: "0.5rem",
-        minWidth: "180px",
-        maxHeight: "320px",
-        overflowY: "auto",
-      }}
+      className="popover"
+      style={{ top: "100%", left: 0 }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
-      <div
-        style={{
-          fontSize: "0.8rem",
-          fontWeight: 600,
-          color: "#374151",
-          marginBottom: "0.4rem",
-          borderBottom: "1px solid #e5e7eb",
-          paddingBottom: "0.3rem",
-        }}
-      >
+      <div className="popover-header">
         {day}日 {SLOT_LABEL[slot]} 指派
       </div>
 
       {/* Bulk actions */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0.4rem",
-          marginBottom: "0.4rem",
-        }}
-      >
-        <button onClick={selectAll} style={bulkBtnStyle}>
-          全選
-        </button>
-        <button onClick={clearAll} style={bulkBtnStyle}>
-          清除
-        </button>
+      <div style={{ display: "flex", gap: "var(--space-2)", marginBottom: "var(--space-2)" }}>
+        <button className="btn btn-ghost btn-xs" onClick={selectAll}>全選</button>
+        <button className="btn btn-ghost btn-xs" onClick={clearAll}>清除</button>
       </div>
 
       {/* User list */}
@@ -179,27 +148,17 @@ export function QuickAssignModal({
         return (
           <label
             key={user.email}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              padding: "0.25rem 0.3rem",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              background: checked ? "#eff6ff" : "transparent",
-              border: conflict ? "1px solid #f59e0b" : "1px solid transparent",
-            }}
+            className={`popover-item${checked ? " selected" : ""}${conflict ? " conflict-item" : ""}`}
           >
             <input
               type="checkbox"
               checked={checked}
               onChange={() => toggle(user.email)}
-              style={{ accentColor: "#1a73e8", cursor: "pointer" }}
+              style={{ accentColor: "var(--color-primary)", cursor: "pointer" }}
             />
             <span>{user.displayName}</span>
             {conflict && (
-              <span title="此人已提報不可上班" style={{ color: "#f59e0b" }}>
+              <span title="此人已提報不可上班" style={{ color: "var(--color-warning)" }}>
                 ⚠
               </span>
             )}
@@ -210,12 +169,3 @@ export function QuickAssignModal({
   );
 }
 
-const bulkBtnStyle: React.CSSProperties = {
-  fontSize: "0.75rem",
-  padding: "0.15rem 0.5rem",
-  border: "1px solid #d1d5db",
-  borderRadius: "4px",
-  background: "#f9fafb",
-  cursor: "pointer",
-  color: "#374151",
-};

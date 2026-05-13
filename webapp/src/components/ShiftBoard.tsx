@@ -25,10 +25,6 @@ interface Props {
   showUnavailability: boolean;
 }
 
-function getEmailColor(isActive: boolean) {
-  return isActive ? "#1a73e8" : "#999";
-}
-
 export function ShiftBoard({
   scheduleId,
   shifts,
@@ -148,7 +144,7 @@ export function ShiftBoard({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
         {/* Sidebar: staff list */}
         <Droppable droppableId="SIDEBAR" isDropDisabled>
           {(provided) => (
@@ -156,19 +152,20 @@ export function ShiftBoard({
               ref={provided.innerRef}
               {...provided.droppableProps}
               style={{
-                minWidth: "120px",
-                background: "#f5f5f5",
-                borderRadius: "8px",
-                padding: "0.75rem",
+                minWidth: "130px",
+                background: "var(--color-secondary-subtle)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-lg)",
+                padding: "var(--space-3)",
                 flexShrink: 0,
               }}
             >
               <div
                 style={{
-                  fontWeight: 600,
-                  marginBottom: "0.25rem",
-                  fontSize: "0.85rem",
-                  color: paintEmail ? "#1d4ed8" : undefined,
+                  fontWeight: 700,
+                  marginBottom: "var(--space-1)",
+                  fontSize: "var(--font-size-sm)",
+                  color: paintEmail ? "var(--color-primary-dark)" : "var(--color-gray-700)",
                 }}
               >
                 {paintEmail
@@ -178,9 +175,9 @@ export function ShiftBoard({
               {paintEmail && (
                 <div
                   style={{
-                    fontSize: "0.72rem",
-                    color: "#6b7280",
-                    marginBottom: "0.5rem",
+                    fontSize: "var(--font-size-xs)",
+                    color: "var(--color-gray-500)",
+                    marginBottom: "var(--space-2)",
                   }}
                 >
                   點擊格子填入，ESC 退出
@@ -205,16 +202,16 @@ export function ShiftBoard({
                           padding: "0.3rem 0.5rem",
                           marginBottom: "0.3rem",
                           background: isPaintSelected
-                            ? "#dbeafe"
+                            ? "var(--color-primary-light)"
                             : snapshot.isDragging
-                              ? "#c2d7f9"
-                              : "#fff",
+                              ? "var(--color-gray-200)"
+                              : "var(--color-surface)",
                           border: isPaintSelected
-                            ? "2px solid #2563eb"
-                            : "1px solid #ddd",
-                          borderRadius: "4px",
-                          fontSize: "0.85rem",
-                          color: getEmailColor(user.isActive),
+                            ? "2px solid var(--color-primary)"
+                            : "1px solid var(--color-border)",
+                          borderRadius: "var(--radius-sm)",
+                          fontSize: "var(--font-size-sm)",
+                          color: user.isActive ? "var(--color-gray-700)" : "var(--color-gray-400)",
                           opacity: user.isActive ? 1 : 0.5,
                           cursor: user.isActive
                             ? paintEmail
@@ -248,7 +245,7 @@ export function ShiftBoard({
             }}
           >
             <thead>
-              <tr style={{ background: "#f0f4ff" }}>
+              <tr style={{ background: "var(--color-primary-light)" }}>
                 <th style={thStyle}>日期</th>
                 {SLOTS.map((s) => (
                   <th key={s} style={thStyle}>
@@ -259,7 +256,7 @@ export function ShiftBoard({
             </thead>
             <tbody>
               {shifts.map((shift) => (
-                <tr key={shift.date} style={{ borderBottom: "1px solid #eee" }}>
+                <tr key={shift.date} style={{ borderBottom: "1px solid var(--color-border-light)" }}>
                   <td
                     style={{
                       ...tdStyle,
@@ -270,9 +267,9 @@ export function ShiftBoard({
                     {shift.date.slice(-2)}
                     <span
                       style={{
-                        color: "#888",
+                        color: "var(--color-gray-400)",
                         fontWeight: 400,
-                        marginLeft: "0.25rem",
+                        marginLeft: "var(--space-1)",
                       }}
                     >
                       ({shift.dayOfWeek})
@@ -310,9 +307,9 @@ export function ShiftBoard({
                             style={{
                               minHeight: "48px",
                               background: snapshot.isDraggingOver
-                                ? "#e8f0fe"
+                                ? "var(--color-primary-light)"
                                 : "transparent",
-                              borderRadius: "4px",
+                              borderRadius: "var(--radius-sm)",
                               padding: "2px",
                               transition: "background 0.15s",
                               cursor: paintEmail ? "cell" : "pointer",
@@ -333,14 +330,14 @@ export function ShiftBoard({
                                     alignItems: "center",
                                     gap: "2px",
                                     margin: "2px",
-                                    padding: "2px 6px",
-                                    background: "#fff",
+                                    padding: "2px 8px",
+                                    background: "var(--color-surface)",
                                     border: conflict
-                                      ? "2px solid #f59e0b"
-                                      : "1px solid #ddd",
-                                    borderRadius: "12px",
-                                    fontSize: "0.8rem",
-                                    color: user?.isActive ? "#222" : "#aaa",
+                                      ? "2px solid var(--color-warning)"
+                                      : "1px solid var(--color-border)",
+                                    borderRadius: "var(--radius-full)",
+                                    fontSize: "var(--font-size-xs)",
+                                    color: user?.isActive ? "var(--color-gray-700)" : "var(--color-gray-400)",
                                     opacity: user?.isActive ? 1 : 0.6,
                                   }}
                                 >
@@ -348,7 +345,7 @@ export function ShiftBoard({
                                   {conflict && (
                                     <span
                                       title="此人已提報不可上班"
-                                      style={{ color: "#f59e0b" }}
+                                      style={{ color: "var(--color-warning)" }}
                                     >
                                       ⚠
                                     </span>
@@ -361,7 +358,7 @@ export function ShiftBoard({
                                       background: "none",
                                       border: "none",
                                       cursor: "pointer",
-                                      color: "#999",
+                                      color: "var(--color-gray-400)",
                                       padding: "0 2px",
                                       lineHeight: 1,
                                       fontSize: "0.9rem",
@@ -381,7 +378,7 @@ export function ShiftBoard({
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  color: "#9ca3af",
+                                  color: "var(--color-gray-300)",
                                   fontSize: "1.1rem",
                                   minHeight: "36px",
                                 }}
@@ -419,11 +416,13 @@ export function ShiftBoard({
 }
 
 const thStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
+  padding: "0.55rem 0.75rem",
   textAlign: "left",
   fontWeight: 600,
-  fontSize: "0.85rem",
-  borderBottom: "2px solid #c7d2fe",
+  fontSize: "var(--font-size-sm)",
+  background: "var(--color-primary-light)",
+  borderBottom: "2px solid var(--color-primary)",
+  color: "var(--color-gray-700)",
 };
 
 const tdStyle: React.CSSProperties = {

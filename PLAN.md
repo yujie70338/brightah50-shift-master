@@ -184,7 +184,52 @@
 
 ---
 
-## 關鍵決策記錄
+## Phase 9：UI 全面品牌化重設計
+
+以萊特動物醫院品牌 Logo 色系（金黃 + 暖棕）取代原有藍色系，建立 CSS Design Token 系統，將全站 inline styles 統一替換為 CSS utility classes。**純前端變更，不影響後端邏輯。**
+
+### 設計決策
+
+| 決策 | 說明 |
+|------|------|
+| 架構 | Pure CSS custom properties（CSS variables）+ global utility classes；不使用 Tailwind、CSS Modules、CSS-in-JS |
+| 品牌主色 | `#D4A843`（金黃，取自 Logo）／ secondary `#9B8B7A`（暖棕） |
+| 背景色 | `#FDFBF7`（暖白），邊框 `#DDD5CA` |
+| Logo 來源 | `brightah50-logo.jpg`（1536×1438px，四格動物圖示 + Bright 字樣） |
+| 圖片處理工具 | macOS `sips` — 轉換 JPG→PNG、裁切、縮放 |
+
+### 新增檔案
+
+- **`webapp/src/styles/tokens.css`** — 單一 source-of-truth CSS custom properties：主色系（`--color-primary`、`--color-primary-light`、`--color-primary-subtle`）、secondary、semantic（success/warning/danger）、neutral grays、背景、字型、間距、圓角、陰影
+- **`webapp/src/styles/global.css`** — Global reset + utility classes：`.page-wrapper`、`.card`、`.btn` 系列（primary/secondary/ghost/danger/success + sm/xs/lg）、`.form-input`/`.form-select`、`.table`/`.table-wrapper`、`.toolbar-bar`、`.badge` 系列、`.staff-chip`、`.popover`/`.popover-header`/`.popover-item`、`.section-title`、`.alert` 系列、`.spinner`/`.loading-center`
+- **`webapp/public/logo.png`** — 240px 寬，用於 Navbar + LoginPage
+- **`webapp/public/favicon.png`** — 32×32px（裁切至四格動物區域）
+- **`webapp/public/apple-touch-icon.png`** — 180×180px
+- **`webapp/public/logo-192.png`** — 192×192px（PWA manifest）
+
+### 修改範圍
+
+| 檔案 | 說明 |
+|------|------|
+| `webapp/index.html` | 標題 → 「萊特動物醫院 - 內部排班」、favicon、apple-touch-icon、`meta theme-color=#D4A843` |
+| `webapp/src/main.tsx` | import `tokens.css` + `global.css` |
+| `webapp/src/pages/LoginPage.tsx` | 暖漸層背景、白卡、Logo 120px、金黃按鈕、spinner 替換載入文字 |
+| `webapp/src/components/Navbar.tsx` | sticky header、左側 logo+標題、中間導覽（金黃底線高亮）、右側 badge+登出 |
+| `webapp/src/components/MonthControls.tsx` | `.toolbar-bar`、`.form-select`、`.btn` 系列 |
+| `webapp/src/components/ShiftBoard.tsx` | 所有 inline styles 替換為 token 值；移除未使用的 `getEmailColor` |
+| `webapp/src/components/QuickAssignModal.tsx` | `.popover`/`.popover-header`/`.popover-item`；移除 `bulkBtnStyle` |
+| `webapp/src/pages/SchedulePage.tsx` | `.page-wrapper`；ReadOnlyBoard 表頭使用 `--color-primary-light` + `--color-primary` 底線；staff chip 使用 token |
+| `webapp/src/pages/AdminPage.tsx` | `.page-wrapper`、`.card`、`.table`/`.table-wrapper`、`.badge` 顯示角色/狀態、`.btn-danger`/`.btn-ghost` |
+| `webapp/src/pages/TemplatePage.tsx` | CellPopover → `.popover`/`.popover-item`；左側列表用 secondary-subtle + primary 選取；表格用 primary-light 表頭；刪除重複說明段落 |
+| `webapp/src/pages/UnavailabilityListPage.tsx` | `.toolbar-bar`、`.table`/`.table-wrapper`、`.btn-danger btn-xs`；移除未使用的 `tdStyle` |
+| `webapp/src/components/UnavailabilityPanel.tsx` | `--color-warning-bg`/`--color-warning-border` 面板；`.form-select`/`.form-input`；`.table`/`.table-wrapper`；UnavailabilityRow 使用 `.btn` 類 |
+| `webapp/src/components/ApplyTemplateModal.tsx` | `.card` 彈窗、`--shadow-xl`、`.form-select`、預覽表格用 token、`.alert-warning`、`.btn-primary`/`.btn-ghost` |
+
+### 驗收結果
+
+1. `cd webapp && npm run build` — ✅ tsc 零錯誤，vite build 成功（88 modules）
+2. `cd webapp && npm run lint` — ✅ 無新增 ESLint 錯誤（原有 e2e 測試檔案 2 個 unused vars 警告為既有問題）
+
 
 | 決策                  | 說明                                                                                          |
 | --------------------- | --------------------------------------------------------------------------------------------- |
