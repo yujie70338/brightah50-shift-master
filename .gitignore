@@ -53,6 +53,10 @@ webapp/test-results/
 .DS_Store
 Thumbs.db
 
+# ── Claude Code ──────────────────────────────────────────────────────────────
+# Local-only tool permission overrides (like .env.local, not for version control)
+.claude/settings.local.json
+
 # ── Misc ─────────────────────────────────────────────────────────────────────
 .eslintcache
 *.tgz
