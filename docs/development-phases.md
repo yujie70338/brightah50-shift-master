@@ -46,7 +46,7 @@
 - **快速點選指派**（`QuickAssignModal`）— 點擊格子開啟 checkbox popover，全選/清除，⚠ 衝突提示，Escape/外點關閉；拖曳保留
 - **Playwright E2E 測試**（`webapp/e2e/`）— auth、schedule、admin、popover、unavailability 五個 spec，`global-setup.ts` 自動 seed + Auth emulator 初始化
 - **CI/CD**（`.github/workflows/ci.yml`）— 4 jobs：lint-typecheck、unit-tests、rules-tests（Java 21）、security；含 `node_modules` cache、JUnit 測試報告、dependency-review（PR）、gitleaks、job timeout
-- **DEV_TESTING.md** — 11 個章節完整測試流程文件，含 AI agent 測試指引
+- **`docs/dev-testing-guide.md`** — 11 個章節完整測試流程文件，含 AI agent 測試指引
 
 ---
 

@@ -1,6 +1,6 @@
 # brightah50-shift-master
 
-輕量內部員工排班系統 — 9 人團隊 V1.0。管理員透過點選或拖曳介面手動排班，員工可查看班表及提報不可上班時段。
+萊特動物醫院內部員工排班系統 — 9 人團隊 V1.0。管理員透過點選或拖曳介面手動排班，員工可查看班表及提報不可上班時段。
 
 ## 技術棧
 
@@ -37,22 +37,17 @@ cp webapp/.env.local.example webapp/.env.local
 # 開啟 webapp/.env.local，填入 Firebase Console → 專案設定 → Web 應用程式的 SDK 設定值
 ```
 
-### 4. 啟動 Emulator Suite
+### 4. 一鍵啟動（推薦）
 
 ```bash
-# macOS 需指定 Java 21
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
-
-npx firebase-tools@latest emulators:start
+./dev-start.sh          # 啟動 emulator + 自動 seed 測試使用者
+./dev-start.sh seed     # 僅重新 seed（emulator 已在跑時使用）
+./dev-start.sh kill     # 清除所有 emulator port
 ```
 
-> 若出現 Port 佔用錯誤：
->
-> ```bash
-> for port in 8080 9099 5002 4000 4400 4500 5001; do
->   lsof -ti :$port | xargs kill -9 2>/dev/null
-> done
-> ```
+腳本會自動設定 Java 21、等待 emulator 就緒後 seed 9 個測試帳號，並列出測試帳號表。
+
+> 若需手動啟動，請參考 [docs/dev-testing-guide.md](docs/dev-testing-guide.md)。
 
 | 服務        | 位址                  |
 | ----------- | --------------------- |
@@ -65,20 +60,6 @@ npx firebase-tools@latest emulators:start
 > **Vite dev server（不經 Firebase Hosting）：** `npm run dev --prefix webapp` → `localhost:5173`  
 > E2E 測試使用此位址（`playwright.config.ts`）。
 
-### 5. 新增第一個管理員帳號
-
-```bash
-FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('./functions/node_modules/firebase-admin');
-admin.initializeApp({ projectId: 'brightah50-shift-master' });
-admin.firestore().collection('users').doc('you@example.com').set({
-  displayName: 'Admin', email: 'you@example.com', role: 'manager', isActive: true
-}).then(() => { console.log('done'); process.exit(0); });
-"
-```
-
-詳細測試流程見 [DEV_TESTING.md](DEV_TESTING.md)。
-
 ---
 
 ## 執行測試
@@ -90,7 +71,6 @@ cd functions
 npm run test:unit
 
 # Firestore Security Rules 整合測試（需先啟動 Firestore Emulator）
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
 npm run test:rules
 ```
 
@@ -98,9 +78,10 @@ npm run test:rules
 # E2E 測試（Playwright）— 需要 emulator 已在 :8080, :9099 運行，Vite dev server 會自動啟動
 cd webapp
 npx playwright test
-# 查看 HTML 報告
 npx playwright show-report
 ```
+
+詳細測試流程見 [docs/dev-testing-guide.md](docs/dev-testing-guide.md)。
 
 ---
 
@@ -114,22 +95,45 @@ npm run build --prefix webapp
 npx firebase-tools@latest deploy
 ```
 
+首次部署說明（Blaze 升級、Identity Platform、第一個 manager 帳號設定）見 [docs/deployment-guide.md](docs/deployment-guide.md)。
+
+---
+
+## 文件目錄
+
+| 文件 | 說明 | 目標讀者 |
+| ---- | ---- | -------- |
+| [docs/manager-guide.md](docs/manager-guide.md) | 管理者操作手冊（排班、員工管理、模板） | 醫院管理者 |
+| [docs/staff-guide.md](docs/staff-guide.md) | 員工操作手冊（查看班表、提報請假） | 醫院員工 |
+| [docs/dev-testing-guide.md](docs/dev-testing-guide.md) | 本地開發與功能測試流程（含 AI agent 測試指引） | 開發者 / QA |
+| [docs/deployment-guide.md](docs/deployment-guide.md) | Firebase 生產環境部署紀錄與問題排查 | DevOps |
+| [docs/development-phases.md](docs/development-phases.md) | 各階段建置紀錄（Phase 1–9） | 開發者 |
+
 ---
 
 ## 專案結構
 
 ```
 brightah50-shift-master/
-├── .github/workflows/ci.yml  GitHub Actions CI/CD（4 jobs）
+├── .github/workflows/ci.yml   GitHub Actions CI/CD（4 jobs）
 ├── firebase.json              Firebase 部署設定
 ├── firestore.rules            Firestore 安全規則
 ├── firestore.indexes.json     Firestore 複合索引
 ├── .firebaserc                Firebase 專案指向
-├── DEV_TESTING.md             本地開發與測試完整流程
-├── PLAN.md                    各階段建置紀錄
+├── dev-start.sh               一鍵啟動 emulator + seed 腳本
+├── scripts/
+│   ├── seed-users.js          Firestore 測試使用者 seed
+│   └── seed-auth.js           Auth emulator 測試使用者 seed
+├── docs/                      專案文件
+│   ├── images/                截圖（操作手冊用）
+│   ├── manager-guide.md       管理者操作手冊
+│   ├── staff-guide.md         員工操作手冊
+│   ├── dev-testing-guide.md   開發測試指南
+│   ├── deployment-guide.md    部署指南
+│   └── development-phases.md  建置歷程紀錄
 ├── functions/                 Cloud Functions（後端）
 │   ├── src/
-│   │   ├── index.ts           3 個 Functions 進入點
+│   │   ├── index.ts           Cloud Functions 進入點
 │   │   └── types.ts           前後端共用型別定義
 │   ├── test/
 │   │   ├── functions.test.ts  Cloud Functions 單元測試（Vitest）
@@ -143,13 +147,18 @@ brightah50-shift-master/
     │   ├── schedule.spec.ts   班表建立與拖曳排班測試
     │   ├── popover.spec.ts    快速點選指派（QuickAssignModal）測試
     │   ├── admin.spec.ts      後台員工管理測試
-    │   └── unavailability.spec.ts 請假申請列表測試
+    │   ├── template.spec.ts   週班表模板測試
+    │   ├── paint-mode.spec.ts 油漆桶填充模式測試
+    │   ├── unavailability.spec.ts 請假申請列表測試
+    │   └── capture-screenshots.ts 操作手冊截圖腳本
     ├── playwright.config.ts
     ├── src/
     │   ├── components/
     │   │   ├── MonthControls.tsx       月份選擇 + 建立/發布（manager only）
+    │   │   ├── Navbar.tsx              統一導覽列
     │   │   ├── ProtectedRoute.tsx      角色保護路由
     │   │   ├── QuickAssignModal.tsx    快速點選指派 popover
+    │   │   ├── ApplyTemplateModal.tsx  套用班表模板 modal
     │   │   ├── ShiftBoard.tsx          拖曳排班（DnD + QuickAssign 整合）
     │   │   └── UnavailabilityPanel.tsx 員工提報不可上班時間
     │   ├── contexts/AuthContext.tsx
@@ -158,7 +167,11 @@ brightah50-shift-master/
     │   │   ├── AdminPage.tsx           後台員工管理（manager only）
     │   │   ├── LoginPage.tsx           Google OAuth 登入
     │   │   ├── SchedulePage.tsx        主班表頁
+    │   │   ├── TemplatePage.tsx        週班表模板管理（manager only）
     │   │   └── UnavailabilityListPage.tsx 請假申請列表（/unavailability）
+    │   ├── styles/
+    │   │   ├── tokens.css              CSS Design Token 變數
+    │   │   └── global.css              全域 utility classes
     │   ├── types/index.ts              前端型別（與 functions/src/types.ts 同步）
     │   ├── App.tsx
     │   └── firebase.ts                Firebase 初始化 + Emulator 自動切換
@@ -175,6 +188,8 @@ brightah50-shift-master/
 | 建立空白月份                |   ✅    |   —   |
 | 拖曳排班                    |   ✅    |   —   |
 | 快速點選指派（popover）     |   ✅    |   —   |
+| 油漆桶填充模式              |   ✅    |   —   |
+| 週班表模板管理              |   ✅    |   —   |
 | 發布/取消發布班表           |   ✅    |   —   |
 | 查看班表                    |   ✅    |  ✅   |
 | 提報不可上班時段            |    —    |  ✅   |
@@ -185,12 +200,13 @@ brightah50-shift-master/
 
 ## Firestore Schema
 
-| 集合                            | 文件 ID   | 核心欄位                                                           |
-| ------------------------------- | --------- | ------------------------------------------------------------------ |
-| `users`                         | email     | `displayName`, `email`, `role`, `isActive`                         |
-| `monthly_schedules`             | `YYYY-MM` | `year`, `month`, `isPublished`, `managerId`                        |
-| `monthly_schedules/{id}/shifts` | `DD`      | `date`, `dayOfWeek`, `slots.{morning,afternoon,evening}: string[]` |
-| `unavailability`                | 自動 ID   | `userId`, `userDisplayName`, `date`, `unavailableSlots`, `reason?` |
+| 集合                            | 文件 ID    | 核心欄位                                                           |
+| ------------------------------- | ---------- | ------------------------------------------------------------------ |
+| `users`                         | email      | `displayName`, `email`, `role`, `isActive`, `isDeleted?`           |
+| `monthly_schedules`             | `YYYY-MM`  | `year`, `month`, `isPublished`, `managerId`                        |
+| `monthly_schedules/{id}/shifts` | `DD`       | `date`, `dayOfWeek`, `slots.{morning,afternoon,evening}: string[]` |
+| `unavailability`                | 自動 ID    | `userId`, `userDisplayName`, `date`, `unavailableSlots`, `reason?` |
+| `weekly_templates`              | 自動 ID    | `name`, `createdBy`, `updatedAt`, `days: Record<DayOfWeek, SlotMap>` |
 
 ### 班別時段
 
@@ -206,6 +222,8 @@ brightah50-shift-master/
 
 | 名稱                   | 類型                  | 功能                                          |
 | ---------------------- | --------------------- | --------------------------------------------- |
-| `beforeusersignedin`   | Auth Blocking Trigger | 白名單比對 + 設定 `role` custom claim         |
+| `beforeusersignedin`   | Auth Blocking Trigger | 白名單比對 + 設定 `role` custom claim；拒絕停用/刪除帳號 |
 | `initializeBlankMonth` | Callable (onCall)     | 建立月份文件 + 當月所有空白 shifts            |
+| `applyWeeklyTemplate`  | Callable (onCall)     | 按星期幾 union merge 週模板至目標月份；自動過濾停用員工 |
 | `onShiftUpdated`       | Firestore Trigger     | 已發布月份異動時記錄 log（TODO: Resend 通知） |
+

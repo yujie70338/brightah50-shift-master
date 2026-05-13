@@ -35,23 +35,16 @@
 
 ## 1. 啟動環境
 
-```bash
-# 必須設定 Java 21，否則 emulator 無法啟動
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+使用專案根目錄的一鍵腳本（推薦）：
 
+```bash
 cd /Users/yujiezheng/brightah50-shift-master
-npx firebase-tools@latest emulators:start
+./dev-start.sh          # 啟動 emulator + seed 測試使用者
+./dev-start.sh seed     # 僅重新 seed（emulator 已在跑）
+./dev-start.sh kill     # 清除所有 port
 ```
 
-> 若出現 `Port taken` 錯誤，先清除佔用的 port：
->
-> ```bash
-> for port in 8080 9099 5002 4000 4400 4500 5001; do
->   lsof -ti :$port | xargs kill -9 2>/dev/null
-> done
-> ```
->
-> 然後重新執行 `emulators:start`。
+腳本會自動處理 Java 21 環境變數、等待 emulator 就緒、執行 seed，並在最後列出所有服務位址與測試帳號。詳細說明見專案根目錄的 `README.md`。
 
 ### 服務位址
 
@@ -63,28 +56,20 @@ npx firebase-tools@latest emulators:start
 | Firestore   | 127.0.0.1:8080        |
 | Functions   | 127.0.0.1:5001        |
 
-### 已知問題與解決方法
-
-| 問題 | 症狀 | 解決方法 |
-|------|------|---------|
-| Firebase CLI 未登入 | `emulators:start` 報錯 `Failed to get Firebase project brightah50-shift-master` 或 `HTTP Error: 401` | 先執行 `npx firebase-tools@latest login`，以 `brightahshiftmaster@gmail.com` 完成 OAuth 登入 |
-| `--no-localhost` 登入失敗 | `Error: credentials are no longer valid` | 改用 `npx firebase-tools@latest login`（不加 `--no-localhost`），讓瀏覽器直接跳轉完成驗證 |
-| Port 被佔用 | `Address already in use` | 執行下方清除指令再重啟 emulator |
-| Java 版本不符 | `Firestore emulator requires Java >= 11` 或 `unsupported class file major version` | 確認 `JAVA_HOME` 指向 Temurin 21，執行 `java -version` 確認輸出含 `21` |
-
-**清除佔用的 port：**
-
-```bash
-for port in 8080 9099 5002 4000 4400 4500 5001; do
-  lsof -ti :$port | xargs kill -9 2>/dev/null
-done
-```
-
 ## 2. 建立測試使用者（Seed）
 
 > **每次重啟 emulator 後 Firestore 資料會清空，需重新執行。**
 
-**方式 A（建議）：使用 seed 腳本**
+**方式 A（建議）：使用 `./dev-start.sh`**
+
+`./dev-start.sh` 會在啟動 emulator 後自動 seed 測試使用者。若 emulator 已在跑，僅需重新 seed：
+
+```bash
+cd /Users/yujiezheng/brightah50-shift-master
+./dev-start.sh seed
+```
+
+**方式 B：使用 seed 腳本**
 
 ```bash
 # 在另一個 terminal（emulator 需已啟動）
@@ -384,7 +369,7 @@ cd /Users/yujiezheng/brightah50-shift-master
 在 VS Code 的 Copilot Chat 輸入：
 
 ```
-請開啟一個 subagent，根據 DEV_TESTING.md 的章節 3–8 逐一執行手動功能測試。
+請開啟一個 subagent，根據 docs/dev-testing-guide.md 的章節 3–8 逐一執行手動功能測試。
 emulator 已在 localhost:5002 運行，Firestore 在 127.0.0.1:8080。
 請使用 playwright 或 fetch 驗證每個測試項目，並回報哪些通過、哪些失敗。
 ```

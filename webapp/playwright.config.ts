@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Exclude the screenshot-capture script from normal test runs
+  // Run separately: npx playwright test e2e/capture-screenshots.spec.ts
+  testIgnore: ["**/capture-screenshots.spec.ts"],
   // Run tests serially to avoid Firestore state conflicts
   fullyParallel: false,
   workers: 1,
