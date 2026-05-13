@@ -150,8 +150,9 @@ brightah50-shift-master/
     │   ├── template.spec.ts   週班表模板測試
     │   ├── paint-mode.spec.ts 油漆桶填充模式測試
     │   ├── unavailability.spec.ts 請假申請列表測試
-    │   └── capture-screenshots.ts 操作手冊截圖腳本
+    │   └── capture-screenshots.spec.ts 操作手冊截圖腳本
     ├── playwright.config.ts
+    ├── screenshot.config.ts       截圖專用 Playwright config
     ├── src/
     │   ├── components/
     │   │   ├── MonthControls.tsx       月份選擇 + 建立/發布（manager only）
