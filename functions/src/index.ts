@@ -5,7 +5,9 @@ import {onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import {getFirestore} from "firebase-admin/firestore";
 import {initializeApp} from "firebase-admin/app";
-import {User, MonthlySchedule, ShiftDocument, ShiftSlots, WeeklyTemplate, DayOfWeek} from "./types.js";
+import {
+  User, MonthlySchedule, ShiftDocument, ShiftSlots, WeeklyTemplate, DayOfWeek,
+} from "./types.js";
 
 initializeApp();
 const db = getFirestore();
@@ -30,6 +32,12 @@ export const beforeusersignedin = beforeUserSignedIn(async (event) => {
   }
 
   const user = userDoc.data() as User;
+  if (user.isDeleted) {
+    throw new HttpsError(
+      "permission-denied",
+      `User ${email} has been deleted.`,
+    );
+  }
   if (!user.isActive) {
     throw new HttpsError(
       "permission-denied",
@@ -336,9 +344,10 @@ export const applyWeeklyTemplate = onCall(async (request) => {
 
   await batch.commit();
 
+  const filteredStaff = [...filteredOut].join(", ");
   logger.info(
     `Template ${templateId} applied to ${scheduleId} by ${callerEmail}. ` +
-      `Days updated: ${daysUpdated}, filtered staff: ${[...filteredOut].join(", ")}`,
+      `Days updated: ${daysUpdated}, filtered staff: ${filteredStaff}`,
   );
 
   return {

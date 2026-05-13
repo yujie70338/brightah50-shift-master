@@ -13,6 +13,7 @@
   - [目錄](#目錄)
   - [1. 啟動環境](#1-啟動環境)
     - [服務位址](#服務位址)
+    - [已知問題與解決方法](#已知問題與解決方法)
   - [2. 建立測試使用者（Seed）](#2-建立測試使用者seed)
   - [3. 功能測試：認證與授權](#3-功能測試認證與授權)
   - [4. 功能測試：管理者 — 班表管理](#4-功能測試管理者--班表管理)
@@ -20,9 +21,12 @@
   - [6. 功能測試：管理者 — 後台管理員工](#6-功能測試管理者--後台管理員工)
   - [7. 功能測試：員工 — 提報不可上班](#7-功能測試員工--提報不可上班)
   - [8. 功能測試：員工 — 請假申請列表](#8-功能測試員工--請假申請列表)
-  - [9. 功能測試：Firestore 安全規則](#9-功能測試firestore-安全規則)
-  - [10. 自動化測試指令](#10-自動化測試指令)
-  - [11. AI Agent 測試指引](#11-ai-agent-測試指引)
+  - [9. 功能測試：週班表模板管理](#9-功能測試週班表模板管理)
+  - [10. 功能測試：油漆桶填充模式](#10-功能測試油漆桶填充模式)
+  - [11. 功能測試：導覽列與 UI 優化](#11-功能測試導覽列與-ui-優化)
+  - [12. 功能測試：Firestore 安全規則](#12-功能測試firestore-安全規則)
+  - [13. 自動化測試指令](#13-自動化測試指令)
+  - [14. AI Agent 測試指引](#14-ai-agent-測試指引)
     - [方式 A：在 GitHub Copilot Chat 啟動 subagent](#方式-a在-github-copilot-chat-啟動-subagent)
     - [方式 B：自動化測試腳本（AI agent 可執行）](#方式-b自動化測試腳本ai-agent-可執行)
     - [測試回報格式（AI agent 請依此格式回報）](#測試回報格式ai-agent-請依此格式回報)
@@ -35,7 +39,7 @@
 # 必須設定 Java 21，否則 emulator 無法啟動
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
 
-cd /Users/marcoszheng/brightah50-shift-master
+cd /Users/yujiezheng/brightah50-shift-master
 npx firebase-tools@latest emulators:start
 ```
 
@@ -59,15 +63,42 @@ npx firebase-tools@latest emulators:start
 | Firestore   | 127.0.0.1:8080        |
 | Functions   | 127.0.0.1:5001        |
 
----
+### 已知問題與解決方法
+
+| 問題 | 症狀 | 解決方法 |
+|------|------|---------|
+| Firebase CLI 未登入 | `emulators:start` 報錯 `Failed to get Firebase project brightah50-shift-master` 或 `HTTP Error: 401` | 先執行 `npx firebase-tools@latest login`，以 `brightahshiftmaster@gmail.com` 完成 OAuth 登入 |
+| `--no-localhost` 登入失敗 | `Error: credentials are no longer valid` | 改用 `npx firebase-tools@latest login`（不加 `--no-localhost`），讓瀏覽器直接跳轉完成驗證 |
+| Port 被佔用 | `Address already in use` | 執行下方清除指令再重啟 emulator |
+| Java 版本不符 | `Firestore emulator requires Java >= 11` 或 `unsupported class file major version` | 確認 `JAVA_HOME` 指向 Temurin 21，執行 `java -version` 確認輸出含 `21` |
+
+**清除佔用的 port：**
+
+```bash
+for port in 8080 9099 5002 4000 4400 4500 5001; do
+  lsof -ti :$port | xargs kill -9 2>/dev/null
+done
+```
 
 ## 2. 建立測試使用者（Seed）
 
 > **每次重啟 emulator 後 Firestore 資料會清空，需重新執行。**
 
+**方式 A（建議）：使用 seed 腳本**
+
+```bash
+# 在另一個 terminal（emulator 需已啟動）
+cd /Users/yujiezheng/brightah50-shift-master
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node scripts/seed-users.js
+```
+
+預期輸出：`done: 9 users seeded`
+
+**方式 B：inline 指令（與 seed-users.js 等效）**
+
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('/Users/marcoszheng/brightah50-shift-master/functions/node_modules/firebase-admin');
+const admin = require('/Users/yujiezheng/brightah50-shift-master/functions/node_modules/firebase-admin');
 admin.initializeApp({ projectId: 'brightah50-shift-master' });
 const db = admin.firestore();
 const users = [
@@ -95,7 +126,7 @@ Promise.all(users.map(u => db.collection('users').doc(u.email).set(u)))
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('/Users/marcoszheng/brightah50-shift-master/functions/node_modules/firebase-admin');
+const admin = require('/Users/yujiezheng/brightah50-shift-master/functions/node_modules/firebase-admin');
 try { admin.app(); } catch { admin.initializeApp({ projectId: 'brightah50-shift-master' }); }
 admin.firestore().collection('users').get()
   .then(s => { console.log('users count:', s.size); s.docs.forEach(d => console.log(' -', d.id, d.data().role, d.data().isActive)); process.exit(0); });
@@ -163,7 +194,7 @@ admin.firestore().collection('users').get()
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('/Users/marcoszheng/brightah50-shift-master/functions/node_modules/firebase-admin');
+const admin = require('/Users/yujiezheng/brightah50-shift-master/functions/node_modules/firebase-admin');
 try { admin.app(); } catch { admin.initializeApp({ projectId: 'brightah50-shift-master' }); }
 const db = admin.firestore();
 // 讓 staff1 在當月第 1 日早班提報不可上班
@@ -187,12 +218,15 @@ db.collection('unavailability').add({
 
 | #   | 測試步驟                                         | 預期結果                                                    |
 | --- | ------------------------------------------------ | ----------------------------------------------------------- |
-| 6-1 | 點擊 header「管理後台」連結，進入 `/admin`       | 顯示員工列表與新增員工表單                                  |
+| 6-1 | 點擊頂部導覽列「管理後台」連結，進入 `/admin`    | 顯示員工列表與新增員工表單                                  |
 | 6-2 | 以 `staff` 角色登入後，直接訪問 `/admin`         | 被擋回 `/schedule`                                          |
 | 6-3 | 在新增表單填入 Email、姓名，選角色「員工」，送出 | 員工出現在列表中；排班頁面的員工欄位同步出現                |
 | 6-4 | 新增時不填 Email                                 | 顯示「Email 與姓名為必填」錯誤                              |
-| 6-5 | 點某員工的「停用」按鈕                           | 員工狀態變為停用；排班頁的 popover 員工清單中不再顯示該員工 |
+| 6-5 | 點某員工的「停用」按鈕                           | 員工狀態變為停用（列表中顯示半透明）；排班頁的 popover 與側欄不再顯示該員工 |
 | 6-6 | 點「啟用」重新啟用                               | 員工重新出現在排班頁員工清單                                |
+| 6-7 | 點某員工的「刪除」按鈕                           | 出現確認視窗「確定要刪除員工…？刪除後此員工將無法登入且從列表消失…」 |
+| 6-8 | 確認刪除後                                       | 該員工立即從成員列表消失（管理員也看不到）；排班側欄與模板指派列表均不再出現 |
+| 6-9 | 查看歷史班表（刪除前已排班的月份）               | 歷史班表仍顯示該員工的名字（軟刪除保留 Firestore 文件）     |
 
 ---
 
@@ -226,49 +260,107 @@ db.collection('unavailability').add({
 
 ---
 
-## 9. 功能測試：Firestore 安全規則
+## 9. 功能測試：週班表模板管理
+
+**前提**：已以 `manager@brightah50.com` 登入。
+
+| #    | 測試步驟                                                              | 預期結果                                                                     |
+| ---- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 9-1  | 點擊頂部導覽列「班表模板」連結，進入 `/templates`                     | 頁面顯示左側模板列表與右側 7×3 格子編輯區                                   |
+| 9-2  | 以 `staff` 角色登入後，直接訪問 `/templates`                          | 被擋回 `/schedule`                                                           |
+| 9-3  | 點「＋ 新增模板」，填入模板名稱，點「儲存」                           | 模板出現在左側列表中                                                         |
+| 9-4  | 點擊「早班 10–12」列的任一格子                                        | popover 向下展開，顯示員工 checkbox 清單                                     |
+| 9-5  | 點擊「晚班 18–21:30」列的任一格子                                     | popover **向上展開**（不超出視窗底部），員工清單完整可見，不需捲動            |
+| 9-6  | 勾選員工後關閉 popover，點「儲存」                                    | 指派資料儲存至 Firestore `weekly_templates` collection                       |
+| 9-7  | 切換到排班頁，點「套用模板」                                          | 出現 ApplyTemplateModal，可選擇模板並套用至當前月份                          |
+| 9-8  | 套用後，被指派的週幾的對應班別格子均出現模板中的員工                  | Union merge：現有員工保留，模板員工加入                                      |
+| 9-9  | 模板中含已停用員工（`isActive: false`）或已刪除員工（`isDeleted: true`） | 套用時自動過濾，這些員工不會出現在排班中                                   |
+| 9-10 | 點「刪除」刪除模板                                                    | 確認對話框 → 模板從列表移除，`weekly_templates` document 已刪除              |
+
+---
+
+## 10. 功能測試：油漆桶填充模式
+
+**前提**：已以 `manager@brightah50.com` 登入，且已建立並發布當月班表。
+
+| #    | 測試步驟                                                    | 預期結果                                                                    |
+| ---- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 10-1 | 點擊排班側欄中任一**啟用中**的員工                          | 側欄標題變為「🖌 {員工姓名}」，員工 chip 顯示藍色邊框高亮，側欄出現「點擊格子填入，ESC 退出」提示 |
+| 10-2 | 點擊班表中任一空格子                                        | 該員工立即被加入格子（`arrayUnion`）；無需開啟 QuickAssignModal              |
+| 10-3 | 再次點擊同一格子（員工已在其中）                            | No-op，不重複加入                                                           |
+| 10-4 | 油漆桶模式下嘗試**拖曳**員工                                | 拖曳功能停用（`isDragDisabled`），無法拖動                                  |
+| 10-5 | 按 **Escape**                                               | 退出油漆桶模式，側欄恢復正常「員工」標題，高亮消失                          |
+| 10-6 | 再次點擊同一員工（已選取狀態）                              | 退出油漆桶模式                                                              |
+| 10-7 | 點擊**停用中**的員工                                        | 無反應（不進入油漆桶模式）                                                  |
+| 10-8 | 填入有請假衝突的格子                                        | 員工被加入，格子顯示 ⚠ 衝突標記（允許強制覆蓋）                            |
+
+---
+
+## 11. 功能測試：導覽列與 UI 優化
+
+**前提**：emulator 已啟動，已登入。
+
+| #    | 測試步驟                                          | 預期結果                                                                             |
+| ---- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 11-1 | 以 manager 登入，檢查 `/schedule` 頁面頂部        | 顯示統一導覽列：班表 / 管理後台 / 班表模板 / 請假申請 / 使用者名稱 / 登出           |
+| 11-2 | 檢查 `/admin` 頁面頂部                            | 顯示相同導覽列，「管理後台」連結以藍色粗體高亮                                      |
+| 11-3 | 檢查 `/templates` 頁面頂部                        | 顯示相同導覽列，「班表模板」連結以藍色粗體高亮；頁面**有**導覽（舊版完全沒有）      |
+| 11-4 | 檢查 `/unavailability` 頁面頂部                   | 顯示相同導覽列，「請假申請」連結以藍色粗體高亮                                      |
+| 11-5 | 以 staff 登入，檢查導覽列                         | 不顯示「管理後台」和「班表模板」連結（manager only）                                |
+| 11-6 | 在任一頁面點擊導覽列中的其他連結                  | 正確導向對應路由，無需用瀏覽器上下頁                                                |
+| 11-7 | 在 `/templates` 點擊「晚班 18–21:30」任一格子    | popover 自動向上展開，員工清單完整顯示，**不**被視窗截斷                            |
+| 11-8 | 在 `/templates` 點擊「早班 10–12」任一格子       | popover 向下展開（空間足夠時維持向下）                                               |
+
+---
+
+## 12. 功能測試：Firestore 安全規則
 
 以下用 AI agent 或手動 curl 驗證 Firestore rules（需 emulator 在 `:8080`）：
 
-| #   | 操作                            | 角色           | 預期    |
-| --- | ------------------------------- | -------------- | ------- |
-| 9-1 | 讀取 `users` collection         | 已登入任何角色 | ✅ 允許 |
-| 9-2 | 寫入 `users` collection         | 已登入 staff   | ❌ 拒絕 |
-| 9-3 | 寫入 `users` collection         | 已登入 manager | ✅ 允許 |
-| 9-4 | 讀取 `monthly_schedules`        | 已登入任何角色 | ✅ 允許 |
-| 9-5 | 寫入 `monthly_schedules`        | 已登入 staff   | ❌ 拒絕 |
-| 9-6 | 寫入 `monthly_schedules/shifts` | 已登入 manager | ✅ 允許 |
-| 9-7 | 建立自己的 `unavailability`     | 已登入 staff   | ✅ 允許 |
-| 9-8 | 刪除他人的 `unavailability`     | 已登入 staff   | ❌ 拒絕 |
-| 9-9 | 未登入讀取任何資料              | 未認證         | ❌ 拒絕 |
+| #     | 操作                              | 角色           | 預期    |
+| ----- | --------------------------------- | -------------- | ------- |
+| 12-1  | 讀取 `users` collection           | 已登入任何角色 | ✅ 允許 |
+| 12-2  | 寫入 `users` collection           | 已登入 staff   | ❌ 拒絕 |
+| 12-3  | 寫入 `users` collection           | 已登入 manager | ✅ 允許 |
+| 12-4  | 讀取 `monthly_schedules`          | 已登入任何角色 | ✅ 允許 |
+| 12-5  | 寫入 `monthly_schedules`          | 已登入 staff   | ❌ 拒絕 |
+| 12-6  | 寫入 `monthly_schedules/shifts`   | 已登入 manager | ✅ 允許 |
+| 12-7  | 建立自己的 `unavailability`       | 已登入 staff   | ✅ 允許 |
+| 12-8  | 刪除他人的 `unavailability`       | 已登入 staff   | ❌ 拒絕 |
+| 12-9  | 未登入讀取任何資料                | 未認證         | ❌ 拒絕 |
+| 12-10 | 更新 user `isDeleted: true`       | 已登入 manager | ✅ 允許 |
+| 12-11 | 更新 user `isDeleted: true`       | 已登入 staff   | ❌ 拒絕 |
+| 12-12 | 讀取 `weekly_templates`           | 已登入任何角色 | ✅ 允許 |
+| 12-13 | 寫入 `weekly_templates`           | 已登入 staff   | ❌ 拒絕 |
+| 12-14 | 寫入 `weekly_templates`           | 已登入 manager | ✅ 允許 |
 
 > 上述規則測試已包含在自動化 rules test 中，見 [functions/test/rules.test.ts](functions/test/rules.test.ts)。
 
 ---
 
-## 10. 自動化測試指令
+## 13. 自動化測試指令
 
 ```bash
 # Functions 單元測試（不需要 emulator，測試 Cloud Functions 邏輯）
-cd /Users/marcoszheng/brightah50-shift-master/functions && npm run test:unit
+cd /Users/yujiezheng/brightah50-shift-master/functions && npm run test:unit
 
 # Firestore Security Rules 整合測試（需要 Firestore emulator 在 :8080）
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
-cd /Users/marcoszheng/brightah50-shift-master/functions && npm run test:rules
+cd /Users/yujiezheng/brightah50-shift-master/functions && npm run test:rules
 
 # Webapp TypeScript 型別檢查 + 建置
-cd /Users/marcoszheng/brightah50-shift-master/webapp && npm run build
+cd /Users/yujiezheng/brightah50-shift-master/webapp && npm run build
 
 # Lint（兩個 workspace）
-cd /Users/marcoszheng/brightah50-shift-master/functions && npm run lint
-cd /Users/marcoszheng/brightah50-shift-master/webapp && npm run lint
+cd /Users/yujiezheng/brightah50-shift-master/functions && npm run lint
+cd /Users/yujiezheng/brightah50-shift-master/webapp && npm run lint
 ```
 
 **全部一次跑（CI 等效）：**
 
 ```bash
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
-cd /Users/marcoszheng/brightah50-shift-master
+cd /Users/yujiezheng/brightah50-shift-master
 
 # lint + build
 (cd functions && npm run lint && npm run build) && \
@@ -283,7 +375,7 @@ cd /Users/marcoszheng/brightah50-shift-master
 
 ---
 
-## 11. AI Agent 測試指引
+## 14. AI Agent 測試指引
 
 本文件可直接作為 AI subagent 的測試任務描述。啟動方式：
 
@@ -305,7 +397,7 @@ AI agent 可執行以下指令進行非 UI 的功能驗證：
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('/Users/marcoszheng/brightah50-shift-master/functions/node_modules/firebase-admin');
+const admin = require('/Users/yujiezheng/brightah50-shift-master/functions/node_modules/firebase-admin');
 try { admin.app(); } catch { admin.initializeApp({ projectId: 'brightah50-shift-master' }); }
 const db = admin.firestore();
 db.collection('users').get().then(s => {
@@ -322,7 +414,7 @@ db.collection('users').get().then(s => {
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('/Users/marcoszheng/brightah50-shift-master/functions/node_modules/firebase-admin');
+const admin = require('/Users/yujiezheng/brightah50-shift-master/functions/node_modules/firebase-admin');
 try { admin.app(); } catch { admin.initializeApp({ projectId: 'brightah50-shift-master' }); }
 const db = admin.firestore();
 const scheduleId = '2026-05';
@@ -340,7 +432,7 @@ db.collection('monthly_schedules').doc(scheduleId).collection('shifts').get().th
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node -e "
-const admin = require('/Users/marcoszheng/brightah50-shift-master/functions/node_modules/firebase-admin');
+const admin = require('/Users/yujiezheng/brightah50-shift-master/functions/node_modules/firebase-admin');
 const { FieldValue } = admin.firestore;
 try { admin.app(); } catch { admin.initializeApp({ projectId: 'brightah50-shift-master' }); }
 const db = admin.firestore();
@@ -361,7 +453,7 @@ ref.update({ 'slots.morning': FieldValue.arrayUnion('staff1@brightah50.com') })
 
 ```bash
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
-cd /Users/marcoszheng/brightah50-shift-master/functions
+cd /Users/yujiezheng/brightah50-shift-master/functions
 npm run test:unit 2>&1 | tail -5
 npm run test:rules 2>&1 | tail -5
 ```
@@ -373,15 +465,19 @@ npm run test:rules 2>&1 | tail -5
 
 | 章節 | 測試項目 | 結果 | 備註 |
 |------|---------|------|------|
-| 3    | 認證與授權 (3-1 ~ 3-7) | ✅ 全部通過 / ❌ N 項失敗 | ... |
-| 4    | 班表管理 (4-1 ~ 4-8)   | ✅ 全部通過 / ❌ N 項失敗 | ... |
-| 5    | 快速點選指派 (5-1 ~ 5-13) | ✅ 全部通過 / ❌ N 項失敗 | ... |
-| 6    | 後台員工管理 (6-1 ~ 6-6)  | ✅ 全部通過 / ❌ N 項失敗 | ... |
-| 7    | 員工提報不可上班 (7-1 ~ 7-6) | ✅ 全部通過 / ❌ N 項失敗 | ... |
-| 8    | 請假申請列表 (8-1 ~ 8-6)    | ✅ 全部通過 / ❌ N 項失敗 | ... |
-| 9    | Firestore 安全規則 | ✅ 自動化測試通過 | ... |
-| 10   | 單元測試 + Build | ✅ 全部通過 | ... |
+| 3    | 認證與授權 (3-1 ~ 3-7)         | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 4    | 班表管理 (4-1 ~ 4-8)           | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 5    | 快速點選指派 (5-1 ~ 5-13)      | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 6    | 後台員工管理 (6-1 ~ 6-9)       | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 7    | 員工提報不可上班 (7-1 ~ 7-6)   | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 8    | 請假申請列表 (8-1 ~ 8-6)       | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 9    | 週班表模板管理 (9-1 ~ 9-10)    | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 10   | 油漆桶填充模式 (10-1 ~ 10-8)   | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 11   | 導覽列與 UI 優化 (11-1 ~ 11-8) | ✅ 全部通過 / ❌ N 項失敗 | ... |
+| 12   | Firestore 安全規則             | ✅ 自動化測試通過 | ... |
+| 13   | 單元測試 + Build               | ✅ 全部通過 | ... |
 
 **失敗項目詳情：**（若有）
-- 5-3：停用員工仍出現在 popover — 原因：...
+- 6-7：刪除按鈕未顯示 — 原因：...
+- 9-5：晚班 popover 仍被截斷 — 原因：...
 ```

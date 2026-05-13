@@ -11,6 +11,7 @@ import { db } from "../firebase";
 import { DayOfWeek, ShiftSlots, User, WeeklyTemplate } from "../types";
 import { useTemplates } from "../hooks/useTemplates";
 import { getDocs } from "firebase/firestore";
+import { Navbar } from "../components/Navbar";
 
 const DAYS: DayOfWeek[] = ["日", "一", "二", "三", "四", "五", "六"];
 const SLOTS: { key: keyof ShiftSlots; label: string }[] = [
@@ -40,6 +41,7 @@ function CellPopover({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [flipUp, setFlipUp] = useState(false);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -62,8 +64,17 @@ function CellPopover({
     };
   }, [onClose]);
 
+  // Flip upward if the popover overflows the viewport bottom
+  useEffect(() => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    if (rect.bottom > window.innerHeight) {
+      setFlipUp(true);
+    }
+  }, []);
+
   const assignedSet = new Set(assigned);
-  const activeUsers = users.filter((u) => u.isActive);
+  const activeUsers = users.filter((u) => u.isActive && !u.isDeleted);
 
   return (
     <div
@@ -71,7 +82,8 @@ function CellPopover({
       onClick={(e) => e.stopPropagation()}
       style={{
         position: "absolute",
-        top: "100%",
+        top: flipUp ? "auto" : "100%",
+        bottom: flipUp ? "100%" : "auto",
         left: 0,
         zIndex: 1000,
         background: "#fff",
@@ -215,7 +227,10 @@ export function TemplatePage() {
 
   return (
     <div style={{ padding: "1rem", maxWidth: "1100px", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: "0.5rem" }}>週班表模板管理</h2>
+      <Navbar title="週班表模板管理" />
+      <p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1rem" }}>
+        建立可重複套用的週班表模板，再從排班頁一鍵套用至任意月份。
+      </p>
       <p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1rem" }}>
         建立可重複套用的週班表模板，再從排班頁一鍵套用至任意月份。
       </p>

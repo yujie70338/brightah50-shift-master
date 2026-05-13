@@ -7,6 +7,7 @@ export interface User {
   email: string;
   role: "manager" | "staff";
   isActive: boolean;
+  isDeleted?: boolean;
 }
 
 export interface MonthlySchedule {

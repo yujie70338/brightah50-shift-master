@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Navbar } from "../components/Navbar";
 import {
   collection,
   query,
@@ -66,17 +66,7 @@ export function UnavailabilityListPage() {
 
   return (
     <div style={{ padding: "1rem", maxWidth: "900px", margin: "0 auto" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <h1 style={{ margin: 0 }}>請假申請</h1>
-        <Link to="/schedule">← 返回排班</Link>
-      </header>
+      <Navbar title="請假申請" />
 
       {/* Month picker */}
       <div

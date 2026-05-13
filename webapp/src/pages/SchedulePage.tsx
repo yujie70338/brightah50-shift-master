@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { Navbar } from "../components/Navbar";
 import { useSchedule } from "../hooks/useSchedule";
 import { MonthControls } from "../components/MonthControls";
 import { ShiftBoard } from "../components/ShiftBoard";
 import { UnavailabilityPanel } from "../components/UnavailabilityPanel";
 
 export function SchedulePage() {
-  const { firebaseUser, userProfile, logout } = useAuth();
+  const { firebaseUser, userProfile } = useAuth();
   const isManager = userProfile?.role === "manager";
 
   // Default to current month
@@ -24,24 +24,7 @@ export function SchedulePage() {
 
   return (
     <div style={{ padding: "1rem", maxWidth: "1200px", margin: "0 auto" }}>
-      {/* Header */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <h1 style={{ margin: 0 }}>排班系統</h1>
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          {isManager && <Link to="/admin">管理後台</Link>}
-          {isManager && <Link to="/templates">班表模板</Link>}
-          <Link to="/unavailability">請假申請</Link>
-          <span style={{ color: "#555" }}>{userProfile?.displayName}</span>
-          <button onClick={logout}>登出</button>
-        </div>
-      </header>
+      <Navbar title="排班系統" />
 
       {/* Month controls (manager sees create/publish; all see month picker) */}
       <MonthControls

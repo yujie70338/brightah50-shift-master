@@ -137,6 +137,53 @@
 
 ---
 
+## Phase 8：UI 體驗修正
+
+三項前端改善，純 UI 變更，不影響後端邏輯。
+
+### Phase 8-A：TemplatePage CellPopover 自動翻轉
+
+**問題**：晚班 18–21:30 位於表格最後一列，popover 固定向下展開會超出視窗底部，需捲動才看到選項。
+
+**修改**：`CellPopover` mount 後以 `getBoundingClientRect()` 偵測底部是否超出 `window.innerHeight`，若超出則 `flipUp = true`，改為 `bottom: "100%"` 向上展開。
+
+- **`webapp/src/pages/TemplatePage.tsx`** — `CellPopover` 加 `flipUp` state 與偵測 `useEffect`；`activeUsers` 過濾同時加入 `!u.isDeleted`
+
+### Phase 8-B：統一 Navbar 組件
+
+**問題**：四個頁面導覽列各不相同（SchedulePage 有完整連結、AdminPage 只有「回班表」、TemplatePage 完全沒有導覽、UnavailabilityListPage 只有「← 返回排班」）。
+
+**修改**：新建共用 `<Navbar title="..." />` 組件，四個頁面的舊 header 全部替換。
+
+- **`webapp/src/components/Navbar.tsx`**（新建）— 左側標題；右側連結：班表 / 管理後台（manager）/ 班表模板（manager）/ 請假申請 / 使用者名稱 / 登出；`useLocation()` 高亮當前頁面
+- **`webapp/src/pages/SchedulePage.tsx`** — 移除舊 header，改用 `<Navbar title="排班系統" />`
+- **`webapp/src/pages/AdminPage.tsx`** — 移除舊 header，改用 `<Navbar title="管理後台" />`
+- **`webapp/src/pages/TemplatePage.tsx`** — 加入 `<Navbar title="週班表模板管理" />`
+- **`webapp/src/pages/UnavailabilityListPage.tsx`** — 移除舊 header，改用 `<Navbar title="請假申請" />`
+
+### Phase 8-C：成員列表加「刪除」按鈕（軟刪除）
+
+**問題**：管理後台只有停用按鈕；停用員工仍顯示於列表（半透明）。管理員需要能把離職員工從列表完全移除。
+
+**設計**：軟刪除（`isDeleted: true`）— 刪除後員工從所有列表消失（管理員也看不到），但歷史班表仍顯示其名字。不支援復原（需重新新增）。不修改 Firestore `allow delete` 規則，只用 `updateDoc`。
+
+- **`webapp/src/types/index.ts`** — `User` interface 加 `isDeleted?: boolean`
+- **`functions/src/types.ts`** — 同步加 `isDeleted?: boolean`
+- **`firestore.rules`** — `userFieldsOnly()` 加入 `isDeleted` 欄位
+- **`webapp/src/pages/AdminPage.tsx`** — `fetchUsers` 過濾 `isDeleted`；新增 `handleDeleteUser`（`window.confirm` → `updateDoc { isDeleted: true }`）；操作欄加紅色「刪除」按鈕
+- **`webapp/src/components/ShiftBoard.tsx`** — sidebar 渲染過濾 `!u.isDeleted`（`userMap` 保留已刪除 user，讓歷史班表仍可解析名字）
+- **`functions/src/index.ts`** — `beforeusersignedin` 加 `isDeleted` 檢查，阻止已刪除使用者登入
+
+### 驗收條件
+
+1. TemplatePage 點擊晚班儲存格 → popover 完整顯示，不超出視窗
+2. 四個頁面頂部顯示一致導覽列，當前頁面連結藍色高亮
+3. 管理後台成員列表每行有「停用/啟用」與「刪除」兩個按鈕
+4. 刪除後員工從列表消失；歷史班表仍顯示其名字
+5. `cd webapp && npx tsc --noEmit` 無錯誤
+
+---
+
 ## 關鍵決策記錄
 
 | 決策                  | 說明                                                                                          |
@@ -146,3 +193,6 @@
 | 拖曳 + Popover 並存   | `ShiftBoard` 保留 DnD，新增 `QuickAssignModal` 作為批量指派的主要方式                         |
 | Emulator hosting port | Firebase Emulator Hosting 跑在 `:5002`；Vite dev server 跑在 `:5173`                          |
 | Java 版本             | macOS 系統預設 Java 17 無法啟動 Firestore Emulator，需指定 `JAVA_HOME` 至 Temurin 21          |
+| CellPopover 翻轉      | 偵測 `getBoundingClientRect().bottom > window.innerHeight`，超出則改為 `bottom: 100%` 向上展開 |
+| 統一 Navbar           | 抽出 `Navbar.tsx` 共用組件，`useLocation()` 高亮當前頁面；四個頁面舊 header 全部替換           |
+| 員工刪除採軟刪除      | `isDeleted` 欄位 + `updateDoc`，不改 `allow delete: if false` 規則；`userMap` 保留刪除記錄讓歷史班表可查名字 |

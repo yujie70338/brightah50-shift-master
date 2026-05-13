@@ -6,13 +6,11 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { Link } from "react-router-dom";
 import { db } from "../firebase";
 import { User } from "../types";
-import { useAuth } from "../contexts/AuthContext";
+import { Navbar } from "../components/Navbar";
 
 export function AdminPage() {
-  const { logout } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +24,11 @@ export function AdminPage() {
   const fetchUsers = async () => {
     setLoading(true);
     const snap = await getDocs(collection(db, "users"));
-    setUsers(snap.docs.map((d) => d.data() as User));
+    setUsers(
+      snap.docs
+        .map((d) => d.data() as User)
+        .filter((u) => !u.isDeleted),
+    );
     setLoading(false);
   };
 
@@ -66,22 +68,15 @@ export function AdminPage() {
     await fetchUsers();
   };
 
+  const handleDeleteUser = async (email: string, name: string) => {
+    if (!window.confirm(`確定要刪除員工「${name}」嗎？\n刪除後此員工將無法登入且從列表消失，若要復原請重新新增。`)) return;
+    await updateDoc(doc(db, "users", email), { isDeleted: true });
+    await fetchUsers();
+  };
+
   return (
     <div style={{ padding: "1rem", maxWidth: "800px", margin: "0 auto" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h1>管理後台</h1>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <Link to="/schedule">回班表</Link>
-          <button onClick={logout}>登出</button>
-        </div>
-      </header>
+      <Navbar title="管理後台" />
 
       <section style={{ marginBottom: "2rem" }}>
         <h2>新增員工</h2>
@@ -157,9 +152,24 @@ export function AdminPage() {
                     {u.isActive ? "啟用" : "停用"}
                   </td>
                   <td style={{ padding: "0.5rem" }}>
-                    <button onClick={() => toggleActive(u.email, u.isActive)}>
-                      {u.isActive ? "停用" : "啟用"}
-                    </button>
+                    <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <button onClick={() => toggleActive(u.email, u.isActive)}>
+                        {u.isActive ? "停用" : "啟用"}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(u.email, u.displayName)}
+                        style={{
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          border: "1px solid #fca5a5",
+                          borderRadius: "4px",
+                          padding: "0.2rem 0.5rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        刪除
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

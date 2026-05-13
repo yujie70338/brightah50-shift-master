@@ -186,7 +186,7 @@ export function ShiftBoard({
                   點擊格子填入，ESC 退出
                 </div>
               )}
-              {users.map((user, index) => (
+              {users.filter((u) => !u.isDeleted).map((user, index) => (
                 <Draggable
                   key={`email::${user.email}`}
                   draggableId={`email::${user.email}`}

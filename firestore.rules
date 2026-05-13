@@ -22,7 +22,7 @@ service cloud.firestore {
     // Only allow fields that are declared in our schema
     function userFieldsOnly() {
       return request.resource.data.keys().hasOnly(
-        ['displayName', 'email', 'role', 'isActive']
+        ['displayName', 'email', 'role', 'isActive', 'isDeleted']
       );
     }
 

@@ -14,12 +14,18 @@ jobs:
     name: Lint & Typecheck (${{ matrix.workspace }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write # allow committing ESLint auto-fixes back to the branch
     strategy:
       fail-fast: false
       matrix:
         workspace: [functions, webapp]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # fetch the PR branch so we can push fixes back
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
@@ -52,7 +58,32 @@ jobs:
           VITE_FIREBASE_APP_ID=1:000000000000:web:0000000000000000
           EOF
 
-      - name: Lint
+      # Run eslint --fix, then commit any changes back to the PR branch.
+      # Only auto-commits on PRs from the same repo (not forks, which lack write access).
+      - name: ESLint auto-fix
+        run: |
+          if [ "${{ matrix.workspace }}" = "functions" ]; then
+            npx eslint --fix --ext .js,.ts .
+          else
+            npx eslint --fix .
+          fi
+        working-directory: ${{ matrix.workspace }}
+
+      - name: Commit ESLint fixes (PR only)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No ESLint fixes to commit."
+          else
+            git pull --rebase origin "${{ github.head_ref }}"
+            git commit -m "style: auto-fix ESLint errors in ${{ matrix.workspace }} [skip ci]"
+            git push origin HEAD:"${{ github.head_ref }}"
+          fi
+
+      - name: Lint (verify no remaining errors)
         run: npm run lint
         working-directory: ${{ matrix.workspace }}
 
