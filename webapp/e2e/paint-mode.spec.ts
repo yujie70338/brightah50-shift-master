@@ -31,9 +31,9 @@ test.describe.serial("油漆桶填充模式", () => {
   // ── 7-1: Click sidebar employee → paint mode activated ───────────────────
   test("7-1: 點擊側欄員工進入填充模式，顯示指示器", async ({ page }) => {
     // Click the first active employee in the sidebar
-    const firstEmployee = page.locator("aside, [data-testid='sidebar']").first();
+    const _firstEmployee = page.locator("aside, [data-testid='sidebar']").first();
     // The sidebar is a Droppable div with staff items
-    const staffItem = page
+    const _staffItem = page
       .locator("text=Staff One")
       .or(page.locator("[style*='grab']").first());
 
