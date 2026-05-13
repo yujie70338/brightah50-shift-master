@@ -373,3 +373,134 @@ body {
   color: var(--color-gray-500);
   font-size: var(--font-size-base);
 }
+
+/* ── Navbar ── */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 56px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.navbar-brand img {
+  height: 32px;
+  width: auto;
+}
+
+.navbar-brand-title {
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  color: var(--color-gray-700);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.navbar-nav {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.nav-link {
+  color: var(--color-gray-600);
+  font-weight: 500;
+  text-decoration: none;
+  font-size: var(--font-size-base);
+  padding: 4px 2px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.nav-link.active {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  border-bottom-color: var(--color-primary);
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.navbar-user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.navbar-user-name {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+/* ── Navbar: tablet / mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+  .navbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: var(--space-2) var(--space-3);
+    row-gap: 0;
+  }
+
+  /* First row: brand (left) + user (right) */
+  .navbar-brand {
+    order: 1;
+  }
+
+  .navbar-user {
+    order: 2;
+    gap: var(--space-2);
+  }
+
+  /* Second row: full-width nav tabs */
+  .navbar-nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-around;
+    gap: 0;
+    padding: var(--space-2) 0 var(--space-1);
+    border-top: 1px solid var(--color-border-light);
+    margin-top: var(--space-2);
+  }
+
+  .nav-link {
+    font-size: var(--font-size-sm);
+    padding: 4px var(--space-2);
+  }
+
+  .navbar-user .badge {
+    display: none;
+  }
+}
+
+/* ── Navbar: small phones (≤ 480px) ── */
+@media (max-width: 480px) {
+  .navbar-brand-title {
+    display: none;
+  }
+
+  .navbar-user-name {
+    max-width: 6rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
