@@ -107,7 +107,7 @@ npx firebase-tools@latest deploy
 | [docs/staff-guide.md](docs/staff-guide.md) | 員工操作手冊（查看班表、提報請假） | 醫院員工 |
 | [docs/dev-testing-guide.md](docs/dev-testing-guide.md) | 本地開發與功能測試流程（含 AI agent 測試指引） | 開發者 / QA |
 | [docs/deployment-guide.md](docs/deployment-guide.md) | Firebase 生產環境部署紀錄與問題排查 | DevOps |
-| [docs/development-phases.md](docs/development-phases.md) | 各階段建置紀錄（Phase 1–9） | 開發者 |
+| [docs/development-phases.md](docs/development-phases.md) | 各階段建置紀錄（Phase 1–10） | 開發者 |
 
 ---
 
@@ -149,6 +149,7 @@ brightah50-shift-master/
     │   ├── admin.spec.ts      後台員工管理測試
     │   ├── template.spec.ts   週班表模板測試
     │   ├── paint-mode.spec.ts 油漆桶填充模式測試
+    │   ├── navbar.spec.ts     Navbar 響應式佈局測試（N-1 ~ N-6）
     │   ├── unavailability.spec.ts 請假申請列表測試
     │   └── capture-screenshots.spec.ts 操作手冊截圖腳本
     ├── playwright.config.ts

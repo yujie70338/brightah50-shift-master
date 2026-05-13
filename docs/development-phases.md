@@ -241,3 +241,33 @@
 | CellPopover 翻轉      | 偵測 `getBoundingClientRect().bottom > window.innerHeight`，超出則改為 `bottom: 100%` 向上展開 |
 | 統一 Navbar           | 抽出 `Navbar.tsx` 共用組件，`useLocation()` 高亮當前頁面；四個頁面舊 header 全部替換           |
 | 員工刪除採軟刪除      | `isDeleted` 欄位 + `updateDoc`，不改 `allow delete: if false` 規則；`userMap` 保留刪除記錄讓歷史班表可查名字 |
+
+---
+
+## Phase 10：Navbar 手機響應式佈局 ✅
+
+手機瀏覽時，原本的 Navbar 把 logo、標題、導覽連結、用戶資訊和登出按鈕全擠在一條 56px 的 flex 行裡，導致元素重疊、難以點擊。本次改為兩行佈局並同步建立測試。**純前端變更，不影響後端邏輯。**
+
+### 設計決策
+
+| 決策 | 說明 |
+|------|------|
+| 佈局策略 | 兩行佈局而非漢堡選單 — 內部工具不需多一次點擊才能看到所有導覽項目 |
+| 實作方式 | CSS media query，不使用 JS `useMediaQuery` — 更簡單，無 layout flash |
+| Breakpoints | `768px`（平板/手機分界）、`480px`（小螢幕手機隱藏標題） |
+| Inline styles 抽離 | 原本 `Navbar.tsx` 100% inline styles → 全改為 CSS class，media query 才能生效 |
+
+### 變更範圍
+
+| 檔案 | 說明 |
+|------|------|
+| `webapp/src/styles/global.css` | 新增 `.navbar`、`.navbar-brand`、`.navbar-brand-title`、`.navbar-nav`、`.navbar-user`、`.navbar-user-info`、`.navbar-user-name`、`.nav-link`、`.nav-link.active` class；`@media (max-width: 768px)`：nav 移至第二行（`order: 3; width: 100%; justify-content: space-around`）、隱藏角色 badge；`@media (max-width: 480px)`：品牌標題 `display: none`、用戶名截斷（`text-overflow: ellipsis`） |
+| `webapp/src/components/Navbar.tsx` | 全部 inline styles 替換為 className；`navLinkStyle()` 函數改為 `navLinkClass()` 回傳 `"nav-link active"` / `"nav-link"` |
+| `webapp/e2e/navbar.spec.ts`（新建）| 6 個 E2E 測試（N-1 ~ N-6）：桌面三區塊同行、手機 nav 換第二行、所有連結在 viewport 內、manager/staff 連結數量、active class 驗證、480px 以下標題隱藏 |
+
+### 驗收結果
+
+1. `cd webapp && npm run build` — ✅ tsc 零錯誤，vite build 成功（88 modules）
+2. `cd webapp && npm run lint` — ✅ 無新增錯誤（原有 AuthContext warning 為既有問題）
+3. 手機 390px：第一行 logo + 用戶，第二行全寬導覽 tab bar
+4. 桌面 1280px：三區塊維持同一行，視覺無 regression

@@ -9,6 +9,8 @@ import {
   User as FirebaseUser,
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
 } from "firebase/auth";
@@ -20,6 +22,7 @@ interface AuthContextValue {
   firebaseUser: FirebaseUser | null;
   userProfile: User | null;
   loading: boolean;
+  loginError: string;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -30,8 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
+    // Handle Google redirect sign-in result (mobile browsers use redirect flow)
+    getRedirectResult(auth).catch(() => {
+      setLoginError("帳號未授權，請確認帳密，或請洽管理員");
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser?.email) {
@@ -47,7 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    // Mobile browsers (iOS Safari, in-app browsers) don't support popups reliably;
+    // use redirect flow to avoid "missing initial state" sessionStorage errors.
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      await signInWithRedirect(auth, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
   };
 
   const logout = async () => {
@@ -56,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ firebaseUser, userProfile, loading, signInWithGoogle, logout }}
+      value={{ firebaseUser, userProfile, loading, loginError, signInWithGoogle, logout }}
     >
       {children}
     </AuthContext.Provider>

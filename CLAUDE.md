@@ -110,6 +110,8 @@ All callables verify `manager` role by re-reading Firestore rather than trusting
 
 All styling uses CSS custom properties defined in `webapp/src/styles/tokens.css` (brand: `--color-primary: #D4A843`, secondary: `--color-secondary: #9B8B7A`). Utility classes are in `webapp/src/styles/global.css`. Both are imported once in `main.tsx`. Components use `className="btn btn-primary"` etc., or inline `style={{ color: "var(--color-warning)" }}` for one-offs. Do **not** add raw hex color values — always use a token variable.
 
+`global.css` also contains **responsive Navbar classes** (`.navbar`, `.navbar-brand`, `.navbar-nav`, `.navbar-user`, `.nav-link`) with `@media (max-width: 768px)` (nav wraps to a full-width second row) and `@media (max-width: 480px)` (brand title hidden). `Navbar.tsx` uses only CSS classNames — no inline styles.
+
 ### Type synchronization
 
 `functions/src/types.ts` and `webapp/src/types/index.ts` are manually kept in sync — there is no shared package. When adding or changing a type, update **both files**.
@@ -117,6 +119,8 @@ All styling uses CSS custom properties defined in `webapp/src/styles/tokens.css`
 ### E2E tests
 
 `webapp/e2e/global-setup.ts` runs before all specs: it clears emulator state and seeds 9 users (1 manager, 7 active staff, 1 inactive staff) via the emulator REST API. Tests must run serially (`workers: 1`) to avoid Firestore state conflicts. The base URL is `http://localhost:5173` (Vite dev server, not the Firebase Hosting emulator at `:5002`).
+
+Spec files: `auth.spec.ts`, `schedule.spec.ts`, `popover.spec.ts`, `admin.spec.ts`, `template.spec.ts`, `paint-mode.spec.ts`, `unavailability.spec.ts`, `navbar.spec.ts` (N-1~N-6, responsive layout tests). Screenshot capture is in `capture-screenshots.spec.ts` (excluded from normal runs; use `screenshot.config.ts`).
 
 ### Environment variables
 

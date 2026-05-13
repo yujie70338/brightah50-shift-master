@@ -3,9 +3,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 
 export function LoginPage() {
-  const { firebaseUser, loading, signInWithGoogle } = useAuth();
+  const { firebaseUser, loading, loginError, signInWithGoogle } = useAuth();
   const [error, setError] = useState("");
   const [signingIn, setSigningIn] = useState(false);
+
+  // loginError comes from redirect flow (mobile); error comes from popup flow (desktop)
+  const displayError = loginError || error;
 
   if (loading) {
     return (
@@ -137,9 +140,9 @@ export function LoginPage() {
           )}
         </button>
 
-        {error && (
+        {displayError && (
           <div className="alert alert-error" style={{ width: "100%", textAlign: "center" }}>
-            {error}
+            {displayError}
           </div>
         )}
       </div>
