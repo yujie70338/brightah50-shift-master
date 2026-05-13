@@ -23,6 +23,7 @@ interface Props {
   users: User[];
   unavailability: Unavailability[];
   showUnavailability: boolean;
+  roleFilter: "all" | "doctor" | "assistant";
 }
 
 export function ShiftBoard({
@@ -31,6 +32,7 @@ export function ShiftBoard({
   users,
   unavailability,
   showUnavailability,
+  roleFilter,
 }: Props) {
   const userMap = new Map(users.map((u) => [u.email, u]));
   const [activeCell, setActiveCell] = useState<{
@@ -170,7 +172,7 @@ export function ShiftBoard({
               >
                 {paintEmail
                   ? `🖌 ${userMap.get(paintEmail)?.displayName ?? paintEmail}`
-                  : "員工"}
+                  : { all: "全部", doctor: "醫師", assistant: "助理" }[roleFilter]}
               </div>
               {paintEmail && (
                 <div
@@ -183,7 +185,7 @@ export function ShiftBoard({
                   點擊格子填入，ESC 退出
                 </div>
               )}
-              {users.filter((u) => !u.isDeleted).map((user, index) => (
+              {users.filter((u) => !u.isDeleted && (roleFilter === "all" || u.role === roleFilter)).map((user, index) => (
                 <Draggable
                   key={`email::${user.email}`}
                   draggableId={`email::${user.email}`}

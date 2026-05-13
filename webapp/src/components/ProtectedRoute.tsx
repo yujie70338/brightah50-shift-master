@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
-  requireRole?: "manager" | "staff";
+  requireRole?: "manager" | "doctor" | "assistant";
 }
 
 export function ProtectedRoute({ children, requireRole }: Props) {

@@ -63,8 +63,9 @@ try { admin.app(); } catch { admin.initializeApp({ projectId: 'brightah50-shift-
 admin.firestore().collection('users').get().then(s => {
   const count = s.size;
   const managers = s.docs.filter(d => d.data().role === 'manager').length;
-  const staff = s.docs.filter(d => d.data().role === 'staff').length;
-  console.log('  使用者總數:', count, '（manager:', managers, '/ staff:', staff + '）');
+  const doctors = s.docs.filter(d => d.data().role === 'doctor').length;
+  const assistants = s.docs.filter(d => d.data().role === 'assistant').length;
+  console.log('  使用者總數:', count, '（manager:', managers, '/ doctor:', doctors, '/ assistant:', assistants + '）');
   if (count === 9) {
     console.log('  ✅ Seed 驗證通過');
   } else {

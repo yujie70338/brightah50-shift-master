@@ -148,7 +148,7 @@ test.describe.serial("快速點選指派", () => {
     await expect(popover).toBeVisible();
 
     // Click on page header area (outside popover)
-    await page.locator("h1").click();
+    await page.locator(".navbar-brand").click();
     await expect(popover).not.toBeVisible({ timeout: 3_000 });
   });
 

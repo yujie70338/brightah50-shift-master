@@ -47,9 +47,9 @@ test.describe.serial("油漆桶填充模式", () => {
     await expect(page.locator("text=🖌")).toBeVisible({ timeout: 3_000 });
     await expect(page.locator("text=點擊格子填入，ESC 退出")).toBeVisible();
 
-    // The clicked chip should have blue border styling
+    // The clicked chip should have a 2px solid border (paint-selected styling)
     await expect(
-      page.locator("div[style*='rgb(37, 99, 235)']").first(),
+      page.locator("div[style*='2px solid var(--color-primary)']").first(),
     ).toBeVisible();
   });
 
@@ -127,9 +127,8 @@ test.describe.serial("油漆桶填充模式", () => {
     await sidebarChip.click();
     await expect(page.locator("text=🖌")).toBeVisible();
 
-    // Re-click the same chip (now styled with pointer cursor in paint mode)
-    // The selected chip has blue border so we can re-locate it
-    const selectedChip = page.locator("div[style*='rgb(37, 99, 235)']").first();
+    // Re-click the same chip (now styled with 2px border in paint-selected state)
+    const selectedChip = page.locator("div[style*='2px solid var(--color-primary)']").first();
     await selectedChip.click();
 
     // Paint mode indicator should disappear

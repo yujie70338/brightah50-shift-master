@@ -18,6 +18,9 @@ export function SchedulePage() {
   const { schedule, shifts, unavailability, users, loading } =
     useSchedule(scheduleId);
 
+  // Role filter for shift board sidebar (manager-only)
+  const [roleFilter, setRoleFilter] = useState<"all" | "doctor" | "assistant">("all");
+
   // Filter unavailability entries belonging to the current user
   const myEmail = firebaseUser?.email ?? "";
   const myUnavailability = unavailability.filter((u) => u.userId === myEmail);
@@ -43,6 +46,7 @@ export function SchedulePage() {
           gap: "0.75rem",
           alignItems: "center",
           marginBottom: "0.75rem",
+          flexWrap: "wrap",
         }}
       >
         {loading && (
@@ -52,6 +56,22 @@ export function SchedulePage() {
           <span style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-sm)" }}>
             此月份尚未建立{isManager ? "，請點「建立新月份」" : ""}
           </span>
+        )}
+        {/* Role filter toggle — manager only */}
+        {isManager && (
+          <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
+            {(["all", "doctor", "assistant"] as const).map((f) => (
+              <button
+                key={f}
+                className={`btn btn-xs ${
+                  roleFilter === f ? "btn-primary" : "btn-ghost"
+                }`}
+                onClick={() => setRoleFilter(f)}
+              >
+                {{ all: "全部", doctor: "醫師", assistant: "助理" }[f]}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
@@ -65,6 +85,7 @@ export function SchedulePage() {
               users={users}
               unavailability={unavailability}
               showUnavailability={true}
+              roleFilter={roleFilter}
             />
           )
         ) : schedule.isPublished ? (
@@ -80,8 +101,8 @@ export function SchedulePage() {
           <p style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-base)" }}>尚未發布</p>
         ))}
 
-      {/* Staff: unavailability submission */}
-      {userProfile?.role === "staff" && (
+      {/* Doctor/assistant: unavailability submission */}
+      {userProfile && userProfile.role !== "manager" && (
         <UnavailabilityPanel
           scheduleId={scheduleId}
           myEmail={myEmail}

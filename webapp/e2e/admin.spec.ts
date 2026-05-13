@@ -40,7 +40,7 @@ test.describe.serial("後台員工管理", () => {
     // Fill the form
     await page.locator("input[type='email'], input[placeholder*='Email']").fill(NEW_EMAIL);
     await page.locator("input[type='text'], input[placeholder*='姓名']").fill(NEW_NAME);
-    // Role select — default is staff; keep it
+    // Role select — default is doctor; keep it
     await page.locator("form button[type='submit'], form button:has-text('新增')").click();
 
     // New employee should appear in list

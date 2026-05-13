@@ -8,7 +8,7 @@ test.describe("認證與授權", () => {
   test("3-1: 未登入開啟首頁，自動導向 /login", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.locator("h1")).toContainText("排班系統");
+    await expect(page.locator("h1")).toContainText("萊特動物醫院");
     await expect(page.locator("button:has-text('使用 Google 登入')")).toBeVisible();
   });
 

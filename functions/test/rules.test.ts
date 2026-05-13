@@ -35,8 +35,8 @@ const RULES = readFileSync(resolve(__dirname, "../../firestore.rules"), "utf8");
 
 // ── Auth token shapes ────────────────────────────────────────────────────────
 const MANAGER_TOKEN = { role: "manager", email: "manager@example.com" };
-const STAFF_TOKEN = { role: "staff", email: "staff@example.com" };
-const OTHER_STAFF_TOKEN = { role: "staff", email: "other@example.com" };
+const STAFF_TOKEN = { role: "doctor", email: "staff@example.com" };
+const OTHER_STAFF_TOKEN = { role: "assistant", email: "other@example.com" };
 
 let testEnv: RulesTestEnvironment;
 

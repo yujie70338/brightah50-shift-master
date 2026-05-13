@@ -14,7 +14,7 @@ test.describe.serial("週班表模板管理", () => {
     await page.waitForURL("**/templates", { timeout: 8_000 });
 
     await expect(
-      page.locator("h2:has-text('週班表模板管理')"),
+      page.locator("button:has-text('＋ 新增模板')"),
     ).toBeVisible({ timeout: 5_000 });
   });
 
@@ -53,9 +53,7 @@ test.describe.serial("週班表模板管理", () => {
     await mondayCell.click();
 
     // Wait for the popover to appear and check a staff checkbox
-    const popover = page.locator(
-      "div[style*='position: absolute']",
-    ).first();
+    const popover = page.locator("div.popover").first();
     await expect(popover).toBeVisible({ timeout: 3_000 });
 
     // Check the first available staff member
@@ -68,9 +66,9 @@ test.describe.serial("週班表模板管理", () => {
     await page.keyboard.press("Escape");
     await page.locator("button:has-text('儲存')").click();
 
-    // Expect the cell to now show a name chip (blue badge)
+    // Expect the cell to now show a name chip
     await expect(
-      mondayCell.locator("div[style*='background: rgb(219, 234, 254)']").first(),
+      mondayCell.locator("div[style*='var(--color-primary-light)']").first(),
     ).toBeVisible({ timeout: 5_000 });
   });
 

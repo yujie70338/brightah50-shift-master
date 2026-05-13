@@ -17,7 +17,7 @@ export function AdminPage() {
   // New user form state
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
-  const [newRole, setNewRole] = useState<"manager" | "staff">("staff");
+  const [newRole, setNewRole] = useState<"manager" | "doctor" | "assistant">("doctor");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,7 +54,7 @@ export function AdminPage() {
       await setDoc(doc(db, "users", newUser.email), newUser);
       setNewEmail("");
       setNewName("");
-      setNewRole("staff");
+      setNewRole("doctor");
       await fetchUsers();
     } catch (err) {
       setError(String(err));
@@ -107,9 +107,10 @@ export function AdminPage() {
           <select
             className="form-select"
             value={newRole}
-            onChange={(e) => setNewRole(e.target.value as "manager" | "staff")}
+            onChange={(e) => setNewRole(e.target.value as "manager" | "doctor" | "assistant")}
           >
-            <option value="staff">員工</option>
+            <option value="doctor">醫師</option>
+            <option value="assistant">助理</option>
             <option value="manager">管理員</option>
           </select>
           <button
@@ -149,8 +150,8 @@ export function AdminPage() {
                   <td>{u.displayName}</td>
                   <td style={{ fontSize: "var(--font-size-sm)", color: "var(--color-gray-500)" }}>{u.email}</td>
                   <td>
-                    <span className={`badge ${u.role === "manager" ? "badge-primary" : "badge-secondary"}`}>
-                      {u.role === "manager" ? "管理員" : "員工"}
+                    <span className={`badge ${{ manager: "badge-primary", doctor: "badge-success", assistant: "badge-secondary" }[u.role]}`}>
+                      {{ manager: "管理員", doctor: "醫師", assistant: "助理" }[u.role]}
                     </span>
                   </td>
                   <td>

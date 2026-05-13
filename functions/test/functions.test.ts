@@ -128,7 +128,7 @@ describe("beforeusersignedin", () => {
 
   it("throws permission-denied for a deactivated user", async () => {
     mocks.docGet.mockResolvedValueOnce(
-      snap(true, { role: "staff", isActive: false }),
+      snap(true, { role: "doctor", isActive: false }),
     );
     await expect(
       authHandler({ data: { email: "inactive@example.com" } }),
@@ -143,12 +143,20 @@ describe("beforeusersignedin", () => {
     expect(result).toEqual({ customClaims: { role: "manager" } });
   });
 
-  it("returns staff role claim for an active staff user", async () => {
+  it("returns doctor role claim for an active doctor user", async () => {
     mocks.docGet.mockResolvedValueOnce(
-      snap(true, { role: "staff", isActive: true }),
+      snap(true, { role: "doctor", isActive: true }),
     );
-    const result = await authHandler({ data: { email: "staff@example.com" } });
-    expect(result).toEqual({ customClaims: { role: "staff" } });
+    const result = await authHandler({ data: { email: "doctor@example.com" } });
+    expect(result).toEqual({ customClaims: { role: "doctor" } });
+  });
+
+  it("returns assistant role claim for an active assistant user", async () => {
+    mocks.docGet.mockResolvedValueOnce(
+      snap(true, { role: "assistant", isActive: true }),
+    );
+    const result = await authHandler({ data: { email: "assistant@example.com" } });
+    expect(result).toEqual({ customClaims: { role: "assistant" } });
   });
 });
 

@@ -5,7 +5,7 @@ export type SlotType = "morning" | "afternoon" | "evening";
 export interface User {
   displayName: string;
   email: string;
-  role: "manager" | "staff";
+  role: "manager" | "doctor" | "assistant";
   isActive: boolean;
   isDeleted?: boolean;
 }
