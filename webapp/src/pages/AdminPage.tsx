@@ -76,7 +76,7 @@ export function AdminPage() {
 
   return (
     <>
-      <Navbar title="萊特動物醫院 - 內部排班" />
+      <Navbar title="萊特動物醫院" />
     <div className="page-wrapper" style={{ maxWidth: "860px" }}>
 
       <section style={{ marginBottom: "var(--space-8)" }}>

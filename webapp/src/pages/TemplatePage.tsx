@@ -209,7 +209,7 @@ export function TemplatePage() {
 
   return (
     <>
-      <Navbar title="萊特動物醫院 - 內部排班" />
+      <Navbar title="萊特動物醫院" />
     <div className="page-wrapper">
       <p style={{ color: "var(--color-gray-500)", fontSize: "var(--font-size-sm)", marginBottom: "var(--space-4)" }}>
         建立可重複套用的週班表模板，再從排班頁一鍵套用至任意月份。

@@ -24,7 +24,7 @@ export function SchedulePage() {
 
   return (
     <>
-      <Navbar title="萊特動物醫院 - 內部排班" />
+      <Navbar title="萊特動物醫院" />
 
     <div className="page-wrapper">
       {/* Month controls (manager sees create/publish; all see month picker) */}

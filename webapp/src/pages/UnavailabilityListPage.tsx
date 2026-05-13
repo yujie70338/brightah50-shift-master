@@ -66,7 +66,7 @@ export function UnavailabilityListPage() {
 
   return (
     <>
-      <Navbar title="萊特動物醫院 - 內部排班" />
+      <Navbar title="萊特動物醫院" />
     <div className="page-wrapper" style={{ maxWidth: "900px" }}>
 
       {/* Month picker */}

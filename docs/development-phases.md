@@ -211,7 +211,7 @@
 
 | 檔案 | 說明 |
 |------|------|
-| `webapp/index.html` | 標題 → 「萊特動物醫院 - 內部排班」、favicon、apple-touch-icon、`meta theme-color=#D4A843` |
+| `webapp/index.html` | 標題 → 「萊特動物醫院」、favicon、apple-touch-icon、`meta theme-color=#D4A843` |
 | `webapp/src/main.tsx` | import `tokens.css` + `global.css` |
 | `webapp/src/pages/LoginPage.tsx` | 暖漸層背景、白卡、Logo 120px、金黃按鈕、spinner 替換載入文字 |
 | `webapp/src/components/Navbar.tsx` | sticky header、左側 logo+標題、中間導覽（金黃底線高亮）、右側 badge+登出 |
