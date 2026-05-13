@@ -35,7 +35,10 @@ service cloud.firestore {
     function shiftFieldsOnly() {
       return request.resource.data.keys().hasOnly(
         ['date', 'dayOfWeek', 'slots']
-      );
+      )
+        && request.resource.data.slots.morning.size() <= 50
+        && request.resource.data.slots.afternoon.size() <= 50
+        && request.resource.data.slots.evening.size() <= 50;
     }
 
     function unavailabilityFieldsOnly() {
@@ -58,7 +61,9 @@ service cloud.firestore {
 
       // Only managers may create or update user documents
       allow create: if isManager() && userFieldsOnly();
-      allow update: if isManager() && userFieldsOnly();
+      // email field (= doc ID) must not be changed after creation
+      allow update: if isManager() && userFieldsOnly()
+        && request.resource.data.email == resource.data.email;
 
       // No one can delete user documents (preserve history)
       allow delete: if false;
@@ -70,7 +75,9 @@ service cloud.firestore {
 
       // Managers create months via Cloud Function (initializeBlankMonth),
       // but also allow direct write for publish toggle from the client.
-      allow create: if isManager() && scheduleFieldsOnly();
+      // managerId must be the caller's own email
+      allow create: if isManager() && scheduleFieldsOnly()
+        && request.resource.data.managerId == request.auth.token.email;
       allow update: if isManager() && scheduleFieldsOnly();
       allow delete: if false;
 
