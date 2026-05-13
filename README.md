@@ -88,14 +88,14 @@ npx playwright show-report
 ## 部署
 
 ```bash
-# 建置前端
-npm run build --prefix webapp
+# 完整部署（functions + firestore + hosting）
+./deploy.sh
 
-# 部署 Cloud Functions + Firestore Rules + Indexes + Hosting
-npx firebase-tools@latest deploy
+# 只部署某個元件
+./deploy.sh functions
+./deploy.sh hosting
+./deploy.sh firestore
 ```
-
-首次部署說明（Blaze 升級、Identity Platform、第一個 manager 帳號設定）見 [docs/deployment-guide.md](docs/deployment-guide.md)。
 
 ---
 
@@ -106,7 +106,6 @@ npx firebase-tools@latest deploy
 | [docs/manager-guide.md](docs/manager-guide.md) | 管理者操作手冊（排班、員工管理、模板） | 醫院管理者 |
 | [docs/staff-guide.md](docs/staff-guide.md) | 員工操作手冊（查看班表、提報請假） | 醫院員工 |
 | [docs/dev-testing-guide.md](docs/dev-testing-guide.md) | 本地開發與功能測試流程（含 AI agent 測試指引） | 開發者 / QA |
-| [docs/deployment-guide.md](docs/deployment-guide.md) | Firebase 生產環境部署紀錄與問題排查 | DevOps |
 | [docs/development-phases.md](docs/development-phases.md) | 各階段建置紀錄（Phase 1–10） | 開發者 |
 
 ---
@@ -121,6 +120,7 @@ brightah50-shift-master/
 ├── firestore.indexes.json     Firestore 複合索引
 ├── .firebaserc                Firebase 專案指向
 ├── dev-start.sh               一鍵啟動 emulator + seed 腳本
+├── deploy.sh                  一鍵部署腳本（functions + firestore + hosting）
 ├── scripts/
 │   ├── seed-users.js          Firestore 測試使用者 seed
 │   └── seed-auth.js           Auth emulator 測試使用者 seed
@@ -129,7 +129,6 @@ brightah50-shift-master/
 │   ├── manager-guide.md       管理者操作手冊
 │   ├── staff-guide.md         員工操作手冊
 │   ├── dev-testing-guide.md   開發測試指南
-│   ├── deployment-guide.md    部署指南
 │   └── development-phases.md  建置歷程紀錄
 ├── functions/                 Cloud Functions（後端）
 │   ├── src/

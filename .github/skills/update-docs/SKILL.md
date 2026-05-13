@@ -35,7 +35,7 @@ Categorize each changed file into one of these impact areas:
 | **User-facing behavior** | `docs/manager-guide.md`, `docs/staff-guide.md` | New UI component, changed workflow, new page |
 | **Architecture / Config** | `README.md` (技術棧/專案結構), `CLAUDE.md` | `firebase.json`, `firestore.rules`, new dependency, new Cloud Function |
 | **Dev workflow** | `docs/dev-testing-guide.md`, `README.md` (快速開始/測試) | `dev-start.sh`, test config, emulator changes |
-| **Deployment** | `docs/deployment-guide.md` | CI/CD, deploy scripts, environment variables |
+| **Deployment** | `README.md` (部署章節) | CI/CD, deploy scripts, environment variables |
 | **Project structure** | `README.md` (專案結構 tree) | New files/folders, renamed files |
 
 ### Step 2: Read Affected Documentation Files
@@ -46,7 +46,6 @@ Read the documentation files identified in Step 1 to understand their current co
 - `docs/manager-guide.md` — Manager operations manual with screenshots
 - `docs/staff-guide.md` — Staff operations manual with screenshots
 - `docs/dev-testing-guide.md` — Local dev setup, test flows, AI agent testing guide
-- `docs/deployment-guide.md` — Production deployment steps, troubleshooting
 - `docs/development-phases.md` — Build history by phase (append-only)
 - `CLAUDE.md` — AI assistant context (architecture, schema, commands, patterns)
 
@@ -63,7 +62,7 @@ For each affected doc file, compare the current content against the code changes
 
 Edit the affected documentation files. Follow these conventions:
 
-- **Language**: `README.md` and `CLAUDE.md` use mixed Chinese/English. `docs/manager-guide.md` and `docs/staff-guide.md` are fully in Traditional Chinese (繁體中文). `docs/dev-testing-guide.md` and `docs/deployment-guide.md` use mixed.
+- **Language**: `README.md` and `CLAUDE.md` use mixed Chinese/English. `docs/manager-guide.md` and `docs/staff-guide.md` are fully in Traditional Chinese (繁體中文). `docs/dev-testing-guide.md` uses mixed.
 - **CSS tokens**: Never reference raw hex colors — use `--color-primary`, `--color-secondary` etc.
 - **Screenshot references**: Use relative paths like `images/01-login.png`
 - **Project structure tree**: Must reflect actual files. Verify with `find` or `list_dir` before updating.
