@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -41,6 +41,46 @@ export function ShiftBoard({
     date: string;
     slot: SlotType;
   } | null>(null);
+
+  // ── Paint / Brush mode ───────────────────────────────────────────────────
+  const [paintEmail, setPaintEmail] = useState<string | null>(null);
+
+  const exitPaintMode = useCallback(() => setPaintEmail(null), []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") exitPaintMode();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [exitPaintMode]);
+
+  const handleSidebarClick = (user: User) => {
+    if (!user.isActive) return;
+    setPaintEmail((prev) => (prev === user.email ? null : user.email));
+    // Close any open QuickAssignModal when entering paint mode
+    setActiveCell(null);
+  };
+
+  const handleCellClick = async (
+    date: string,
+    slot: SlotType,
+    currentAssigned: string[],
+  ) => {
+    if (!paintEmail) return; // handled by td onClick for QuickAssignModal
+    if (currentAssigned.includes(paintEmail)) return; // already assigned — no-op
+    const shiftDocId = date.slice(-2);
+    const shiftRef = doc(
+      db,
+      "monthly_schedules",
+      scheduleId,
+      "shifts",
+      shiftDocId,
+    );
+    await updateDoc(shiftRef, {
+      [`slots.${slot}`]: arrayUnion(paintEmail),
+    });
+  };
 
   // Build a set of unavailable (date, slot) per email for O(1) lookup
   const unavailSet = new Set<string>();
@@ -126,39 +166,71 @@ export function ShiftBoard({
               <div
                 style={{
                   fontWeight: 600,
-                  marginBottom: "0.5rem",
+                  marginBottom: "0.25rem",
                   fontSize: "0.85rem",
+                  color: paintEmail ? "#1d4ed8" : undefined,
                 }}
               >
-                員工
+                {paintEmail
+                  ? `🖌 ${userMap.get(paintEmail)?.displayName ?? paintEmail}`
+                  : "員工"}
               </div>
+              {paintEmail && (
+                <div
+                  style={{
+                    fontSize: "0.72rem",
+                    color: "#6b7280",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  點擊格子填入，ESC 退出
+                </div>
+              )}
               {users.map((user, index) => (
                 <Draggable
                   key={`email::${user.email}`}
                   draggableId={`email::${user.email}`}
                   index={index}
+                  isDragDisabled={paintEmail !== null}
                 >
-                  {(prov, snapshot) => (
-                    <div
-                      ref={prov.innerRef}
-                      {...prov.draggableProps}
-                      {...prov.dragHandleProps}
-                      style={{
-                        padding: "0.3rem 0.5rem",
-                        marginBottom: "0.3rem",
-                        background: snapshot.isDragging ? "#c2d7f9" : "#fff",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "0.85rem",
-                        color: getEmailColor(user.isActive),
-                        opacity: user.isActive ? 1 : 0.5,
-                        cursor: user.isActive ? "grab" : "not-allowed",
-                        ...prov.draggableProps.style,
-                      }}
-                    >
-                      {user.displayName}
-                    </div>
-                  )}
+                  {(prov, snapshot) => {
+                    const isPaintSelected = paintEmail === user.email;
+                    return (
+                      <div
+                        ref={prov.innerRef}
+                        {...prov.draggableProps}
+                        {...prov.dragHandleProps}
+                        onClick={() => handleSidebarClick(user)}
+                        style={{
+                          padding: "0.3rem 0.5rem",
+                          marginBottom: "0.3rem",
+                          background: isPaintSelected
+                            ? "#dbeafe"
+                            : snapshot.isDragging
+                              ? "#c2d7f9"
+                              : "#fff",
+                          border: isPaintSelected
+                            ? "2px solid #2563eb"
+                            : "1px solid #ddd",
+                          borderRadius: "4px",
+                          fontSize: "0.85rem",
+                          color: getEmailColor(user.isActive),
+                          opacity: user.isActive ? 1 : 0.5,
+                          cursor: user.isActive
+                            ? paintEmail
+                              ? isPaintSelected
+                                ? "pointer"
+                                : "cell"
+                              : "grab"
+                            : "not-allowed",
+                          userSelect: "none",
+                          ...prov.draggableProps.style,
+                        }}
+                      >
+                        {user.displayName}
+                      </div>
+                    );
+                  }}
                 </Draggable>
               ))}
               {provided.placeholder}
@@ -209,14 +281,26 @@ export function ShiftBoard({
                   {SLOTS.map((slot) => (
                     <td
                       key={slot}
-                      style={{ ...tdStyle, position: "relative" }}
-                      onClick={() =>
-                        setActiveCell((prev) =>
-                          prev?.date === shift.date && prev?.slot === slot
-                            ? null
-                            : { date: shift.date, slot },
-                        )
-                      }
+                      style={{
+                        ...tdStyle,
+                        position: "relative",
+                        cursor: paintEmail ? "cell" : undefined,
+                      }}
+                      onClick={() => {
+                        if (paintEmail) {
+                          void handleCellClick(
+                            shift.date,
+                            slot,
+                            shift.slots[slot],
+                          );
+                        } else {
+                          setActiveCell((prev) =>
+                            prev?.date === shift.date && prev?.slot === slot
+                              ? null
+                              : { date: shift.date, slot },
+                          );
+                        }
+                      }}
                     >
                       <Droppable droppableId={`SHIFT::${shift.date}::${slot}`}>
                         {(prov, snapshot) => (
@@ -231,7 +315,7 @@ export function ShiftBoard({
                               borderRadius: "4px",
                               padding: "2px",
                               transition: "background 0.15s",
-                              cursor: "pointer",
+                              cursor: paintEmail ? "cell" : "pointer",
                             }}
                           >
                             {shift.slots[slot].map((email) => {

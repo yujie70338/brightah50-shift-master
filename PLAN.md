@@ -96,6 +96,47 @@
 
 ---
 
+## Phase 7：油漆桶填充模式 (Paint / Brush Mode)
+
+大幅減少手動拖拉疲勞：管理員在側欄「點選」員工後，直接在格子上逐格「單擊」即可填入，操作速度提升三倍以上。**純前端變更，不需要後端或 Firestore 規則修改。**
+
+### 設計決策
+
+| 決策 | 說明 |
+|------|------|
+| 填充動作 | 僅加入 — 格子已有該員工則 no-op，不做 toggle 也不移除 |
+| 拖刷 | 不支援 — 每格個別點擊，簡化且避免誤操作 |
+| 退出方式 | 再次點擊同一員工取消選取，或按 Escape 退出 |
+| 與 DnD | 互斥 — 油漆桶啟用時停用 Drag-and-Drop |
+| 衝突處理 | 允許填入但顯示 ⚠ 標記（與現有行為一致） |
+| 目標限制 | 非 active 員工不可被選為填充目標 |
+
+### 變更範圍
+
+- **`webapp/src/components/ShiftBoard.tsx`** — 唯一修改的程式碼檔案
+  - 新增 `paintEmail: string | null` state
+  - Escape 鍵監聽 → 退出模式
+  - 側欄員工 `onClick`：active 員工選取/取消，非 active 無效
+  - 選中視覺：邊框 `border: 2px solid #2563eb` + 背景 `#dbeafe`
+  - 側欄標題動態：正常顯示「員工」；油漆桶顯示「🖌 填充模式：{displayName}」+ 提示
+  - `isDragDisabled={paintEmail !== null}` 互斥 DnD
+  - 格子 `onClick`：`paintEmail != null` 時直接 `arrayUnion`，不開啟 QuickAssignModal
+  - 格子 hover：`cursor: cell` + 背景 `#e8f0fe`
+- **`webapp/e2e/paint-mode.spec.ts`** — 新建 E2E 測試 (7-1 ~ 7-6)
+
+### 驗收條件
+
+1. 點擊側欄員工 → 進入油漆桶模式（高亮 + 指示器）
+2. 點擊格子 → 員工被加入；重複點擊 → no-op
+3. ESC 或再次點擊員工 → 退出模式
+4. 油漆桶模式下 DnD 停用
+5. 衝突格子允許填入但顯示 ⚠
+6. 非 active 員工不可選取
+7. `webapp tsc --noEmit` 無錯誤
+8. `npx playwright test e2e/paint-mode.spec.ts`
+
+---
+
 ## 關鍵決策記錄
 
 | 決策                  | 說明                                                                                          |

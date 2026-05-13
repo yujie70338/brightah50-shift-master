@@ -28,7 +28,28 @@
       "Bash(npx tsc *)",
       "Bash(npm install *)",
       "Bash(npx playwright *)",
-      "Bash(ps -p 154 -o command=)"
+      "Bash(ps -p 154 -o command=)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k,':',v\\) for k,v in d.get\\('scripts',{}\\).items\\(\\)]\")",
+      "Bash(/usr/libexec/java_home -v 21)",
+      "Bash(export JAVA_HOME=$\\(/usr/libexec/java_home -v 21 2>/dev/null\\))",
+      "Bash(java -version)",
+      "Read(//Library/Java/JavaVirtualMachines/**)",
+      "Read(//opt/homebrew/opt/**)",
+      "Bash(export JAVA_HOME=\"/Users/yujiezheng/.antigravity/extensions/redhat.java-1.52.0-darwin-arm64/jre/21.0.9-macosx-aarch64\")",
+      "Bash(/Users/yujiezheng/.antigravity/extensions/redhat.java-1.52.0-darwin-arm64/jre/21.0.9-macosx-aarch64/bin/java -version)",
+      "Bash(JAVA_HOME=\"/Users/yujiezheng/.antigravity/extensions/redhat.java-1.52.0-darwin-arm64/jre/21.0.9-macosx-aarch64\" npx firebase-tools@latest emulators:start --only auth,firestore,functions)",
+      "Bash(echo \"PID=$!\")",
+      "Bash(curl -s http://127.0.0.1:8080/)",
+      "Bash(curl -s http://127.0.0.1:9099/)",
+      "Bash(npx firebase-tools@latest experiments:enable webframeworks)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(xargs cat *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git -C /Users/yujiezheng/brightah50-shift-master add webapp/e2e/template.spec.ts)",
+      "Bash(git -C /Users/yujiezheng/brightah50-shift-master status)",
+      "Bash(git *)",
+      "Bash(echo \"PID: $!\")"
     ]
   }
 }
