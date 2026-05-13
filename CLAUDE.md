@@ -64,11 +64,11 @@ cd functions && npx vitest run test/functions.test.ts
 Firebase Auth (Google OAuth / Email+Password)
     → beforeUserSignedIn (blocking trigger)
         checks email against users/{email} whitelist
-        injects role custom claim (manager | staff)
+        injects role custom claim (manager | doctor | assistant)
     → client AuthContext reads claim from token
 ```
 
-The `useAuth()` hook exposes both `firebaseUser` (Firebase token) and `userProfile` (Firestore `users/{email}` doc). Role-based access in `ProtectedRoute` uses `userProfile.role`; Firestore security rules use the `role` custom claim from the token.
+The `useAuth()` hook exposes both `firebaseUser` (Firebase token) and `userProfile` (Firestore `users/{email}` doc). Role-based access in `ProtectedRoute` uses `userProfile.role`; Firestore security rules use the `role` custom claim from the token. The three roles are `manager`, `doctor`, and `assistant` — `doctor` and `assistant` have identical permissions (can view published schedules, submit unavailability); only `manager` can edit schedules and manage users.
 
 ### Firestore schema
 
@@ -103,6 +103,7 @@ All callables verify `manager` role by re-reading Firestore rather than trusting
 **ShiftBoard interaction modes**:
 - Normal: click a cell → `QuickAssignModal` popover (checkbox multi-select)
 - Paint/Brush mode: click a sidebar employee → all cell clicks call `arrayUnion` directly; DnD is disabled while active; Escape exits
+- Role filter: toggle buttons (全部/醫師/助理) in the toolbar filter the sidebar employee list by `role`; manager-only UI
 
 **Soft delete**: Employees are never hard-deleted. `isDeleted: true` hides them from all lists and blocks login via the blocking trigger. Shift history still resolves their name via `userMap` (which is built from all users including deleted ones).
 
@@ -118,7 +119,7 @@ All styling uses CSS custom properties defined in `webapp/src/styles/tokens.css`
 
 ### E2E tests
 
-`webapp/e2e/global-setup.ts` runs before all specs: it clears emulator state and seeds 9 users (1 manager, 7 active staff, 1 inactive staff) via the emulator REST API. Tests must run serially (`workers: 1`) to avoid Firestore state conflicts. The base URL is `http://localhost:5173` (Vite dev server, not the Firebase Hosting emulator at `:5002`).
+`webapp/e2e/global-setup.ts` runs before all specs: it clears emulator state and seeds 9 users (1 manager, 4 active doctors, 3 active assistants, 1 inactive assistant) via the emulator REST API. Tests must run serially (`workers: 1`) to avoid Firestore state conflicts. The base URL is `http://localhost:5173` (Vite dev server, not the Firebase Hosting emulator at `:5002`).
 
 Spec files: `auth.spec.ts`, `schedule.spec.ts`, `popover.spec.ts`, `admin.spec.ts`, `template.spec.ts`, `paint-mode.spec.ts`, `unavailability.spec.ts`, `navbar.spec.ts` (N-1~N-6, responsive layout tests). Screenshot capture is in `capture-screenshots.spec.ts` (excluded from normal runs; use `screenshot.config.ts`).
 

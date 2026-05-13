@@ -96,23 +96,24 @@ test.describe.serial("班表管理", () => {
       .locator("td")
       .nth(1);
 
-    // Ensure there is at least one chip (may have been added in 4-4)
-    // Chip is a <div> wrapping the name + × button
-    const chip = firstMorningCell.locator("div:has(button[title='移除'])").first();
+    // Chip is an inline-flex pill div (border-radius-full) containing name + × button
+    const chipSelector = "div[style*='--radius-full']:has(button[title='移除'])";
+    const chip = firstMorningCell.locator(chipSelector).first();
     if (await chip.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      const countBefore = await firstMorningCell.locator(chipSelector).count();
       await chip.locator("button[title='移除']").click();
-      await expect(chip).not.toBeVisible({ timeout: 5_000 });
+      await expect(firstMorningCell.locator(chipSelector)).toHaveCount(countBefore - 1, { timeout: 5_000 });
     } else {
       // Add via popover first then remove
       await firstMorningCell.click();
       const popover = page.locator('div:has(button:has-text("全選"))').first();
       await expect(popover).toBeVisible({ timeout: 5_000 });
-      await popover.locator("label input[type='checkbox']").first().check();
+      await popover.locator("label input[type='checkbox']").first().click();
       await page.keyboard.press("Escape");
       await page.waitForTimeout(500);
-      const newChip = firstMorningCell.locator("div:has(button[title='移除'])").first();
-      await newChip.locator("button[title='移除']").click();
-      await page.waitForTimeout(500);
+      const countBefore = await firstMorningCell.locator(chipSelector).count();
+      await firstMorningCell.locator(chipSelector).first().locator("button[title='移除']").click();
+      await expect(firstMorningCell.locator(chipSelector)).toHaveCount(countBefore - 1, { timeout: 5_000 });
     }
   });
 

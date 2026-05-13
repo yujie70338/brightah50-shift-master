@@ -317,7 +317,9 @@ export function ShiftBoard({
                               cursor: paintEmail ? "cell" : "pointer",
                             }}
                           >
-                            {shift.slots[slot].map((email) => {
+                            {shift.slots[slot]
+                              .filter((email) => roleFilter === "all" || userMap.get(email)?.role === roleFilter)
+                              .map((email) => {
                               const user = userMap.get(email);
                               const conflict = isConflict(
                                 email,
@@ -374,7 +376,7 @@ export function ShiftBoard({
                             })}
                             {prov.placeholder}
                             {/* + hint for empty or sparse cells */}
-                            {shift.slots[slot].length === 0 && (
+                            {shift.slots[slot].filter((email) => roleFilter === "all" || userMap.get(email)?.role === roleFilter).length === 0 && (
                               <div
                                 style={{
                                   display: "flex",
