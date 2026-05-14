@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import html2canvas from "html2canvas";
 import { useAuth } from "../contexts/AuthContext";
 import { Navbar } from "../components/Navbar";
 import { useSchedule } from "../hooks/useSchedule";
 import { MonthControls } from "../components/MonthControls";
 import { ShiftBoard } from "../components/ShiftBoard";
 import { UnavailabilityPanel } from "../components/UnavailabilityPanel";
+import { useToast } from "../contexts/ToastContext";
 
 export function SchedulePage() {
   const { firebaseUser, userProfile } = useAuth();
@@ -20,6 +22,27 @@ export function SchedulePage() {
 
   // Role filter for shift board sidebar (manager-only)
   const [roleFilter, setRoleFilter] = useState<"all" | "doctor" | "assistant">("all");
+  const boardRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
+
+  const handleExportPng = async () => {
+    if (!boardRef.current) return;
+    try {
+      const canvas = await html2canvas(boardRef.current, { scale: 2 });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `班表_${scheduleId}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("班表已匯出為 PNG");
+      });
+    } catch {
+      showToast("匯出失敗", "error");
+    }
+  };
 
   // Filter unavailability entries belonging to the current user
   const myEmail = firebaseUser?.email ?? "";
@@ -73,9 +96,21 @@ export function SchedulePage() {
             ))}
           </div>
         )}
+        {/* Export PNG button */}
+        {schedule && shifts.length > 0 && (
+          <button
+            className="btn btn-ghost btn-xs"
+            onClick={handleExportPng}
+            style={isManager ? undefined : { marginLeft: "auto" }}
+            title="匯出班表為 PNG 圖片"
+          >
+            匯出 PNG
+          </button>
+        )}
       </div>
 
       {/* Shift board — manager gets DND; staff gets read-only view (published only) */}
+      <div ref={boardRef}>
       {schedule &&
         (isManager ? (
           shifts.length > 0 && (
@@ -100,6 +135,7 @@ export function SchedulePage() {
         ) : (
           <p style={{ color: "var(--color-gray-400)", fontSize: "var(--font-size-base)" }}>尚未發布</p>
         ))}
+      </div>
 
       {/* Doctor/assistant: unavailability submission */}
       {userProfile && userProfile.role !== "manager" && (

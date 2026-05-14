@@ -43,9 +43,9 @@ test.describe.serial("後台員工管理", () => {
     // Role select — default is doctor; keep it
     await page.locator("form button[type='submit'], form button:has-text('新增')").click();
 
-    // New employee should appear in list
-    await expect(page.locator(`text=${NEW_NAME}`)).toBeVisible({ timeout: 5_000 });
-    await expect(page.locator(`text=${NEW_EMAIL}`)).toBeVisible({ timeout: 5_000 });
+    // New employee should appear in list (use td to avoid matching toast)
+    await expect(page.locator(`td:has-text("${NEW_NAME}")`)).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator(`td:has-text("${NEW_EMAIL}")`)).toBeVisible({ timeout: 5_000 });
   });
 
   // ── 6-4: Validation — empty email ────────────────────────────────────────

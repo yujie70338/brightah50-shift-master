@@ -4,6 +4,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db, functions } from "../firebase";
 import { MonthlySchedule, ShiftDocument } from "../types";
 import { ApplyTemplateModal } from "./ApplyTemplateModal";
+import { useToast } from "../contexts/ToastContext";
 
 interface Props {
   schedule: MonthlySchedule | null;
@@ -22,9 +23,8 @@ export function MonthControls({
 }: Props) {
   const [creating, setCreating] = useState(false);
   const [toggling, setToggling] = useState(false);
-  const [error, setError] = useState("");
   const [showApplyModal, setShowApplyModal] = useState(false);
-  const [applySuccess, setApplySuccess] = useState("");
+  const { showToast } = useToast();
 
   // Month picker state — default to current month
   const today = new Date();
@@ -46,14 +46,14 @@ export function MonthControls({
   };
 
   const handleCreate = async () => {
-    setError("");
     setCreating(true);
     try {
       const fn = httpsCallable(functions, "initializeBlankMonth");
       await fn({ year: pickerYear, month: pickerMonth });
       onMonthChange(selectedId);
+      showToast("月份建立成功");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+      showToast(err instanceof Error ? err.message : String(err), "error");
     } finally {
       setCreating(false);
     }
@@ -63,9 +63,11 @@ export function MonthControls({
     if (!schedule) return;
     setToggling(true);
     try {
+      const newState = !schedule.isPublished;
       await updateDoc(doc(db, "monthly_schedules", scheduleId), {
-        isPublished: !schedule.isPublished,
+        isPublished: newState,
       });
+      showToast(newState ? "班表已發布" : "班表已取消發布");
     } finally {
       setToggling(false);
     }
@@ -115,10 +117,7 @@ export function MonthControls({
       {isManager && (
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => {
-            setApplySuccess("");
-            setShowApplyModal(true);
-          }}
+          onClick={() => setShowApplyModal(true)}
           title="套用週班表模板"
         >
           套用模板
@@ -144,16 +143,6 @@ export function MonthControls({
         <span className="badge badge-success">正式版本</span>
       )}
 
-      {error && (
-        <span style={{ color: "var(--color-danger)", fontSize: "var(--font-size-sm)" }}>{error}</span>
-      )}
-
-      {applySuccess && (
-        <span style={{ color: "var(--color-success)", fontSize: "var(--font-size-sm)" }}>
-          ✓ {applySuccess}
-        </span>
-      )}
-
       {showApplyModal && (
         <ApplyTemplateModal
           scheduleId={scheduleId}
@@ -164,7 +153,7 @@ export function MonthControls({
               s.slots.evening.length > 0,
           )}
           onClose={() => setShowApplyModal(false)}
-          onSuccess={(msg) => setApplySuccess(msg)}
+          onSuccess={(msg) => showToast(`✓ ${msg}`)}
         />
       )}
     </div>

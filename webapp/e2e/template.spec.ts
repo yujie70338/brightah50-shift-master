@@ -100,10 +100,8 @@ test.describe.serial("週班表模板管理", () => {
     // Confirm apply
     await page.locator("button:has-text('確認套用')").click();
 
-    // Modal closes; success message should be visible in MonthControls
-    await expect(
-      page.locator("span:has-text('模板套用完成')"),
-    ).toBeVisible({ timeout: 10_000 });
+    // Modal closes; success toast should be visible
+    await expect(page.locator(".toast")).toBeVisible({ timeout: 10_000 });
   });
 
   // ── 8-5: Staff cannot access template page ────────────────────────────

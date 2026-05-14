@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { Unavailability, SlotType } from "../types";
+import { useToast } from "../contexts/ToastContext";
 
 const SLOT_LABELS: Record<SlotType, string> = {
   morning: "早班",
@@ -44,11 +45,22 @@ export function UnavailabilityPanel({
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedStartDate, setSelectedStartDate] = useState("");
+  const [selectedEndDate, setSelectedEndDate] = useState("");
   const [selectedSlots, setSelectedSlots] = useState<SlotType[]>([]);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const { showToast } = useToast();
+
+  const isAllDay = selectedSlots.length === 3;
+
+  const toggleAllDay = () => {
+    if (isAllDay) {
+      setSelectedSlots([]);
+    } else {
+      setSelectedSlots([...SLOTS]);
+    }
+  };
 
   const toggleSlot = (slot: SlotType) => {
     setSelectedSlots((prev) =>
@@ -58,26 +70,47 @@ export function UnavailabilityPanel({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    if (!selectedDate || selectedSlots.length === 0) {
-      setError("請選擇日期與至少一個時段");
+    if (!selectedStartDate || selectedSlots.length === 0) {
+      showToast("請選擇日期與至少一個時段", "error");
+      return;
+    }
+    const endDate = selectedEndDate || selectedStartDate;
+    if (endDate < selectedStartDate) {
+      showToast("結束日期不可早於起始日期", "error");
       return;
     }
     setSubmitting(true);
     try {
-      const entry: Omit<Unavailability, "id"> = {
-        userId: myEmail,
-        userDisplayName: myDisplayName,
-        date: selectedDate,
-        unavailableSlots: selectedSlots,
-        ...(reason ? { reason } : {}),
-      };
-      await addDoc(collection(db, "unavailability"), entry);
-      setSelectedDate("");
+      // Generate date range (use local date arithmetic to avoid UTC offset)
+      const dates: string[] = [];
+      const start = new Date(`${selectedStartDate}T00:00:00`);
+      const end = new Date(`${endDate}T00:00:00`);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        dates.push(`${y}-${m}-${day}`);
+      }
+      // Submit all dates in parallel
+      await Promise.all(
+        dates.map((date) => {
+          const entry: Omit<Unavailability, "id"> = {
+            userId: myEmail,
+            userDisplayName: myDisplayName,
+            date,
+            unavailableSlots: selectedSlots,
+            ...(reason ? { reason } : {}),
+          };
+          return addDoc(collection(db, "unavailability"), entry);
+        }),
+      );
+      showToast(`已提報 ${dates.length} 天不可上班時間`);
+      setSelectedStartDate("");
+      setSelectedEndDate("");
       setSelectedSlots([]);
       setReason("");
     } catch (err) {
-      setError(String(err));
+      showToast(String(err), "error");
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +162,8 @@ export function UnavailabilityPanel({
           value={pickerYear}
           onChange={(e) => {
             setPickerYear(Number(e.target.value));
-            setSelectedDate("");
+            setSelectedStartDate("");
+            setSelectedEndDate("");
           }}
         >
           {years.map((y) => (
@@ -141,7 +175,8 @@ export function UnavailabilityPanel({
           value={pickerMonth}
           onChange={(e) => {
             setPickerMonth(Number(e.target.value));
-            setSelectedDate("");
+            setSelectedStartDate("");
+            setSelectedEndDate("");
           }}
         >
           {months.map((m) => (
@@ -151,16 +186,45 @@ export function UnavailabilityPanel({
 
         <select
           className="form-select"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+          value={selectedStartDate}
+          onChange={(e) => setSelectedStartDate(e.target.value)}
         >
-          <option value="">— 選擇日期 —</option>
+          <option value="">— 起始日期 —</option>
           {dateOptions.map((d) => (
             <option key={d} value={d}>{d.slice(-2)} 日</option>
           ))}
         </select>
 
-        <div style={{ display: "flex", gap: "var(--space-3)" }}>
+        <select
+          className="form-select"
+          value={selectedEndDate}
+          onChange={(e) => setSelectedEndDate(e.target.value)}
+        >
+          <option value="">— 結束日期（選填）—</option>
+          {dateOptions.map((d) => (
+            <option key={d} value={d}>{d.slice(-2)} 日</option>
+          ))}
+        </select>
+
+        <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-1)",
+              cursor: "pointer",
+              fontSize: "var(--font-size-sm)",
+              fontWeight: 600,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isAllDay}
+              onChange={toggleAllDay}
+              style={{ accentColor: "var(--color-primary)" }}
+            />
+            全天
+          </label>
           {SLOTS.map((slot) => (
             <label
               key={slot}
@@ -195,8 +259,6 @@ export function UnavailabilityPanel({
           {submitting ? "提交中…" : "提交"}
         </button>
       </form>
-
-      {error && <p className="alert alert-error">{error}</p>}
 
       {myUnavailability.length > 0 && (
         <div className="table-wrapper">
@@ -270,11 +332,13 @@ function UnavailabilityRow({
             ))}
           </div>
         ) : (
-          entry.unavailableSlots
-            .map((s) =>
-              s === "morning" ? "早" : s === "afternoon" ? "中" : "晚",
-            )
-            .join("、")
+          entry.unavailableSlots.length === 3
+            ? "全天"
+            : entry.unavailableSlots
+                .map((s) =>
+                  s === "morning" ? "早" : s === "afternoon" ? "中" : "晚",
+                )
+                .join("、")
         )}
       </td>
       <td>

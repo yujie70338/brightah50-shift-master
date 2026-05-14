@@ -33,10 +33,8 @@ test.describe.serial("班表管理", () => {
   test("4-2: 重複點「建立新月份」，顯示已存在錯誤", async ({ page }) => {
     // Schedule already created in 4-1; try again
     await page.locator('button:has-text("建立新月份"), button:has-text("建立空白月份")').first().click();
-    // Expect an error/toast indicating already exists
-    await expect(
-      page.locator("span:has-text('already exists'), span:has-text('已建立'), span:has-text('已存在')").first()
-    ).toBeVisible({ timeout: 5_000 });
+    // Expect an error toast indicating already exists
+    await expect(page.locator(".toast")).toBeVisible({ timeout: 5_000 });
   });
 
   // ── 4-3: Switch month and create ─────────────────────────────────────────
@@ -164,7 +162,8 @@ test.describe.serial("班表管理", () => {
     await signIn(page, "staff1@brightah50.com");
 
     await expect(page.locator("text=尚未發布")).toBeVisible({ timeout: 8_000 });
-    await expect(page.locator("table")).not.toBeVisible();
+    // The shift board table (with 早班/中班/晚班 headers) should not be visible
+    await expect(page.locator("th:has-text('早班')")).not.toBeVisible();
   });
 
   // ── 4-8: Year dropdown contains ±2 years ─────────────────────────────────

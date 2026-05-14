@@ -9,6 +9,7 @@ import {
 import { db } from "../firebase";
 import { User } from "../types";
 import { Navbar } from "../components/Navbar";
+import { useToast } from "../contexts/ToastContext";
 
 export function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -19,7 +20,7 @@ export function AdminPage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState<"manager" | "doctor" | "assistant">("doctor");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const { showToast } = useToast();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -38,9 +39,8 @@ export function AdminPage() {
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     if (!newEmail || !newName) {
-      setError("Email 與姓名為必填");
+      showToast("Email 與姓名為必填", "error");
       return;
     }
     setSubmitting(true);
@@ -56,8 +56,9 @@ export function AdminPage() {
       setNewName("");
       setNewRole("doctor");
       await fetchUsers();
+      showToast(`已新增員工「${newUser.displayName}」`);
     } catch (err) {
-      setError(String(err));
+      showToast(String(err), "error");
     } finally {
       setSubmitting(false);
     }
@@ -66,12 +67,14 @@ export function AdminPage() {
   const toggleActive = async (email: string, current: boolean) => {
     await updateDoc(doc(db, "users", email), { isActive: !current });
     await fetchUsers();
+    showToast(!current ? "已啟用員工" : "已停用員工");
   };
 
   const handleDeleteUser = async (email: string, name: string) => {
     if (!window.confirm(`確定要刪除員工「${name}」嗎？\n刪除後此員工將無法登入且從列表消失，若要復原請重新新增。`)) return;
     await updateDoc(doc(db, "users", email), { isDeleted: true });
     await fetchUsers();
+    showToast(`已刪除員工「${name}」`);
   };
 
   return (
@@ -122,7 +125,6 @@ export function AdminPage() {
           </button>
         </form>
         </div>
-        {error && <p className="alert alert-error" style={{ marginTop: "var(--space-2)" }}>{error}</p>}
       </section>
 
       <section>

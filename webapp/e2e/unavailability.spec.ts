@@ -51,7 +51,7 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
       .locator("text=提報不可上班時間")
       .locator("..")
       .locator("select");
-    await expect(selects).toHaveCount(3); // year, month, date
+    await expect(selects).toHaveCount(4); // year, month, start date, end date
   });
 
   // ── 7-2: Year/month selects update date options ───────────────────────────
@@ -88,14 +88,14 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     await signIn(page, "staff1@brightah50.com");
 
     const panel = page.locator("text=提報不可上班時間").locator("..");
-    await panel.locator("select").last().selectOption("2026-05-15");
+    await panel.locator("select").nth(2).selectOption("2026-05-15"); // start date
     await panel
       .locator("label:has-text('早班') input[type='checkbox']")
       .check();
     await panel.locator("button:has-text('提交')").click();
 
     // Form should reset after successful submission
-    await expect(panel.locator("select").last()).toHaveValue("", {
+    await expect(panel.locator("select").nth(2)).toHaveValue("", {
       timeout: 5_000,
     });
     // New record should appear in the record list (table cell, not select option)
@@ -117,7 +117,7 @@ test.describe.serial("員工提報不可上班 + 請假申請列表", () => {
     const countBefore = await panel.locator("tbody tr").count();
 
     // Submit again for same date
-    await panel.locator("select").last().selectOption("2026-05-15");
+    await panel.locator("select").nth(2).selectOption("2026-05-15"); // start date
     await panel
       .locator("label:has-text('早班') input[type='checkbox']")
       .check();
